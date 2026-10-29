@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+/* Neutral placeholder tokens. Brand colours are applied here once the identity is final. */
+:root {
+  --background: #ffffff;
+  --foreground: #111827;
+  --muted: #4b5563;
+  --border: #e5e7eb;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}

@@ -1,0 +1,88 @@
+# Lead intake credential: Option A vs Option B (decision record)
+
+Status: **recommendation made, nothing verified against Supabase, nothing created remotely.**
+Owner decision (recorded): prefer Option B, but do not assume it works until verified.
+
+## 1. The problem
+
+`public.submit_lead()` is the only way a web lead is stored. Browsers, `anon` and `authenticated` cannot run it. So the Next.js server needs *some* credential that can. That credential decides how bad a leak is.
+
+## 2. Option B: dedicated `lead_intake` database role
+
+File: `supabase/planned/lead_intake_role.sql` (not a migration, not applied).
+
+### How the role would authenticate
+
+It does **not** use the Data API (PostgREST), an API key or a JWT. It is a normal Postgres `LOGIN` role with a password, used over a direct SQL connection from the Next.js server.
+
+Credential required: **one password** (for `lead_intake`), stored only as a server-only connection string in the hosting provider's secret store (variable name reserved in `.env.example`: `LEAD_INTAKE_DATABASE_URL`). Never `NEXT_PUBLIC_`, never in git, never in chat.
+
+### Compatibility with Supabase's connection options
+
+From Supabase's connection documentation (read during this review; **not tested**):
+
+| Connection | Host / port | Username | IP | Usable for this? |
+|---|---|---|---|---|
+| Direct | `db.<ref>.supabase.co:5432` | `postgres` documented | IPv6 on Free/Pro; IPv4 needs an add-on | Poor fit: serverless hosts are often IPv4-only. Custom-role username form not documented for it. |
+| Shared pooler, session mode | `…pooler.supabase.com:5432` (host from the Connect dialog) | `<role>.<project-ref>` | IPv4 | Possible |
+| **Shared pooler, transaction mode** | same host, port **6543** | `<role>.<project-ref>` | IPv4 | **Recommended by Supabase for serverless**; prepared statements must be disabled in the driver |
+| Dedicated pooler | `db.<ref>.supabase.co:6543` | `postgres` documented | IPv6 (IPv4 add-on) | Paid tier; custom-role form not documented |
+
+The documentation states that a custom role connects through the shared pooler as `<role>.<project-ref>`. Supabase's own examples show it working. **However**, public community threads report custom login roles failing through the pooler (for example "Tenant or user not found", or connection requests dropped from the queue), with no confirmed cause or fix in those threads. Another report attributes a failure to Supabase's automatic network bans. So Option B is *documented as possible* and *reported to fail for some people*. That is exactly why it must be proven on the dev project.
+
+TLS: use at least `sslmode=require`; prefer `verify-full` with Supabase's root certificate.
+
+### What the role can and cannot do (proven locally on PGlite only)
+
+- Can: execute `public.submit_lead` and nothing else.
+- Cannot: read or write any table, create objects, read `private.settings`, execute `record_lead_export`, bypass RLS, or inherit from any role. Tests: `supabase/tests/hardening.test.mjs` ("planned least-privilege intake role" and "function privileges are explicit").
+
+### Residual risks of Option B (even if it works)
+
+- A leaked password lets an attacker submit junk leads, bounded by the hourly cap. That cap is itself a nuisance: an attacker could fill it and make real leads return `rate_limited` until the hour passes. Mitigation: alert on `rate_limited`, rotate the password.
+- Every Postgres role can read system catalogs (table and function *names*, not data) and use temporary tables. Accepted.
+- Failed logins may trigger Supabase's automatic network bans, which could block the hosting provider's shared egress IP. To be checked.
+- The password rotates by `\password lead_intake` in psql plus a hosting-secret update; the pooler may briefly reject logins after a change (reported). Plan a quiet window.
+- Adds a Postgres driver dependency to the app (for example `postgres`) and connection-string handling.
+
+### Pass criteria (all must hold on the dev project before adopting B)
+
+1. `lead_intake` created by a migration as `NOLOGIN`; login enabled and password set by you with psql `\password` (so the plaintext never appears in a statement or query history).
+2. Connect from your machine through the shared pooler, transaction mode (6543), as `lead_intake.<ref>`, TLS on, prepared statements off. `select current_user` returns `lead_intake`.
+3. `select public.submit_lead(...)` with clearly fake data returns `created`; the fake lead is then removed by you as the project owner.
+4. Negative checks as `lead_intake`: `select` on `leads`, `create table`, `record_lead_export`, `private.settings` are all denied.
+5. Session mode (5432) also works as a fallback transport.
+6. Reconnect after at least 10 idle minutes; five concurrent connections; behaviour is stable.
+7. Rotate the password once; confirm new connections work and old ones fail.
+8. Confirm one deliberate wrong-password attempt does not lock out the machine (do **not** repeat failed attempts).
+9. In Phase 3, repeat 2–3 from the real hosting environment.
+
+## 3. If Option B cannot be used safely
+
+**Do not silently fall back to the secret key.** The Phase 3 code will read exactly one credential variable:
+`LEAD_INTAKE_DATABASE_URL` (Option B) **or** `SUPABASE_SECRET_KEY` (Option A), and refuse to start if both or neither are set. If Option B's connection fails at runtime, intake returns an error and alerts; it never retries with the secret key.
+
+The safest practical alternative is **Option A with compensating controls**, adopted only by an explicit entry in `docs/decisions.md`:
+
+| Control | Why |
+|---|---|
+| Key exists only in the Production scope of the host's secret store; the development project uses a different key | Limits exposure |
+| One server module (`import "server-only"`) exposing only `submitLead()`, which only calls this RPC | Limits what code can reach the key |
+| No logging of headers, clients or caught error objects; no personal data in error reports | Keys and PII leak through logs |
+| Alerts on `rate_limited` and on unusual lead volume | Detects abuse and misuse |
+| Rotation on suspicion and on a schedule; confirm individual secret keys can be revoked | Limits exposure time |
+| Secret scanning in CI; `npm run check:env` before every deploy | Catches mistakes |
+| Few dependencies; review new ones | Supply-chain risk |
+
+## 4. Other options considered and rejected
+
+| Idea | Why not |
+|---|---|
+| `submit_lead` callable by `anon` with the public key | Anyone could call it directly and skip Turnstile and validation |
+| A custom JWT role through the Data API | Needs the project's JWT signing secret, which can also mint `service_role` tokens: the same blast radius as Option A |
+| Supabase Edge Function holding the secret key | Same key, same blast radius, more moving parts |
+| A separate Supabase project just for intake | Extra cost and a sync problem for a project this size |
+
+## 5. Recommendation
+
+**Adopt Option B if, and only if, every pass criterion above succeeds on the dev project. Otherwise adopt Option A with the compensating controls and record that decision.** Until the live test, both are plans. The database side is the same either way: `submit_lead` is unchanged, and adding `lead_intake` later is one small additive migration (a copy of the planned file without any password).
