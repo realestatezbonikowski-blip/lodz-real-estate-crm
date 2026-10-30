@@ -70,15 +70,29 @@ npx supabase db push --linked --skip-vault
 
 ## Stage 5: create the first owner (manual, in the dashboard)
 
-1. Dashboard → Authentication → Users → add a user with the owner's email and a strong password (auto-confirm for this first user). Note the user's UUID.
-2. Dashboard → SQL editor, run **once**, with the real UUID and name (this is deliberately not a migration, so no personal data enters git):
+State checked read-only on 2026-10-30: `auth.users` 0 rows, `profiles` 0 rows, no trigger on `auth.users` (nothing creates a profile on signup), email signups and anonymous sign-ins disabled. There is deliberately **no bootstrap endpoint or script** in the application: the first owner is created by you, in the dashboard, so no public path can ever grant owner rights.
+
+1. Dashboard → Authentication → Users → **Add user → Create new user**. Enter the owner's email and a long unique password (16+ characters, from your password manager), tick **Auto Confirm User**. Do not paste the password anywhere else. (Optional hardening: Authentication → settings → raise the minimum password length. The dashboard is the only place to see or change it.)
+2. Dashboard → SQL editor, run **once**, with the owner's real email and name (this is deliberately not a migration, so no personal data enters git). It looks the user id up by email, so there is no UUID to mistype, and a wrong email inserts nothing:
    ```sql
    insert into public.profiles (id, full_name, role)
-   values ('<auth user uuid>', '<full name>', 'owner');
+   select id, 'Imię Nazwisko', 'owner' from auth.users where email = 'owner@example.com'
+   returning id, full_name, role, is_active;
    ```
+   It must return exactly one row. Zero rows means the email did not match; nothing was changed.
 3. Confirm: `select id, full_name, role, is_active from public.profiles;` shows one active owner, and `select action, actor_id from public.audit_log;` shows one `staff.create` row with no actor (expected: made in the SQL editor).
 4. Create the assistant the same way later with `'assistant'`, only when needed.
-5. MFA is not enforced yet. Enrol a TOTP factor for the owner as soon as the CRM has the screen; enforcement (`supabase/planned/mfa_enforcement.sql`) is a pre-production requirement.
+5. MFA is not enforced yet and the CRM has no enrolment screen. Enforcement (`supabase/planned/mfa_enforcement.sql`) is a pre-production requirement; until then use a unique, long password.
+
+**What it changes:** one row in `public.profiles` (plus the automatic `staff.create` audit row). It grants no database privilege: the SQL editor already runs as the project owner, and RLS/grants are untouched. The new owner can do only what the `owner` policies allow, through the CRM.
+
+**Undo (tested on local Postgres):** the last-owner guard blocks deleting the only active owner (and also deleting that Auth user, because deleting the user cascades to the profile). As the project owner in the SQL editor:
+```sql
+alter table public.profiles disable trigger profiles_protect_last_owner;
+delete from public.profiles where id = (select id from auth.users where email = 'owner@example.com');
+alter table public.profiles enable trigger profiles_protect_last_owner;
+```
+The `staff.create`/`staff.delete` audit rows stay, by design. Then delete the Auth user in the dashboard if wanted.
 
 ## Stage 5b: CRM smoke test (after the owner exists)
 
