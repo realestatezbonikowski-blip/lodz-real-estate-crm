@@ -39,6 +39,8 @@
 | 34 | Option B prepared locally: role moved from `supabase/planned/` into migration `20261030110000_lead_intake_role.sql` (not applied), adapter `postgres-submitter.ts` using `postgres`, wired only when `LEAD_INTAKE_DATABASE_URL` is set | Owner preference for Option B. Remote apply, password and live verification still need explicit approval |
 | 35 | Production-only enforced CSP (same-origin + Cloudflare Turnstile, `'unsafe-inline'` scripts) and `noindex` until `NEXT_PUBLIC_ALLOW_INDEXING=true` | Placeholder content must not be indexed; a nonce CSP would force dynamic rendering |
 | 36 | Multi-instance rate limiting: database limits and Turnstile stay authoritative; add a Cloudflare rate-limit rule at deployment; no shared store | See `docs/content-needed.md` section 4 |
+| 37 | `lead_intake` role applied to DEV (NOLOGIN, no password) with the owner's approval on 2026-10-30; credential created by the owner via `npm run setup:intake`, never by the assistant | Keeps the password out of chat, logs and SQL history |
+| 38 | Admin CRM: server-side auth with `@supabase/ssr` and the publishable key only; role from `profiles`; `requireStaff()`/`requireOwner()` on every page and server action; a write filtered out by RLS is reported as a failure; no browser Supabase client | Phase 4. The proxy only refreshes sessions and redirects; it is not the security boundary |
 
 See `docs/database.md` for the schema, authorization matrix and open database decisions, and `docs/security-review-phase-1b.md` for the review.
 

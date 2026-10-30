@@ -33,6 +33,12 @@ Items 1, 2, 4 and 6 are launch gates. Also: the real privacy notice text and ver
 | Hosting provider, domain, production Supabase project, backups | Deployment | You |
 | Native-speaker review of the Ukrainian and English text | `messages/uk.json`, `messages/en.json` | Reviewer |
 
+## 3b. Admin CRM: what is verified and what needs the first owner
+
+Built and tested locally: server-side login, role check from `profiles`, leads list with status counts, search (name, e-mail, phone), filters (status, project, source, assignee, archive), lead detail, status change, assignment, notes/calls/e-mails/meetings, contact edit, archive/restore, manual leads, owner-only delete. Unit and structural tests pass; screens were checked in headless Chrome with fake data (desktop, tablet, phone).
+
+**Not verified live**, because no staff account exists: sign-in, the real PostgREST reads and writes of these screens, and the status codes of RLS-filtered writes. After the owner exists (runbook Stage 5), a short smoke test is needed: sign in; create a manual lead; change its status (a `status_change` row must appear in the history); add a note; assign; archive and restore; confirm the lead shows up in the list; sign out; confirm `/admin/leads` redirects to login. Then create an assistant and confirm that the delete section is hidden and a direct delete is refused. MFA is not enforced yet (`supabase/planned/mfa_enforcement.sql`); it is a pre-production requirement.
+
 ## 4. Production strategy notes
 
 - **Rate limiting.** `src/lib/security/rate-limit.ts` is per server instance, in memory. On a multi-instance or serverless host it only slows bursts on one instance. The authoritative limits are in the database (`submit_lead`: duplicate window and hourly cap) and Turnstile. Recommended addition when the domain is on Cloudflare (needed for Turnstile anyway, no new paid service): a Cloudflare rate-limiting rule for `POST /api/leads`. A shared store (for example Redis) is not justified at 15–20 apartments.

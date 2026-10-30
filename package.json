@@ -8,10 +8,12 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:unit": "node --test \"src/**/*.test.ts\"",
+    "test:unit": "node --test \"src/**/*.test.ts\" \"scripts/**/*.test.mjs\"",
     "test:db": "node --test supabase/tests/rls.test.mjs supabase/tests/hardening.test.mjs",
     "check:env": "node scripts/check-env.mjs",
-    "live:anon": "node scripts/live-check-anon.mjs"
+    "live:anon": "node scripts/live-check-anon.mjs",
+    "setup:intake": "node scripts/setup-intake-credential.mjs",
+    "verify:intake": "node scripts/verify-intake-role.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

@@ -80,6 +80,10 @@ npx supabase db push --linked --skip-vault
 4. Create the assistant the same way later with `'assistant'`, only when needed.
 5. MFA is not enforced yet. Enrol a TOTP factor for the owner as soon as the CRM has the screen; enforcement (`supabase/planned/mfa_enforcement.sql`) is a pre-production requirement.
 
+## Stage 5b: CRM smoke test (after the owner exists)
+
+See `docs/content-needed.md` section 3b for the exact list. The admin CRM (`/admin`) has been built and tested locally only; this is its first live check.
+
 ## Stage 6: verify against the real project
 
 Record each result in `docs/security-review-phase-1b.md` section 5.

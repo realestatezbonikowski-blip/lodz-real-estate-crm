@@ -1,6 +1,6 @@
 # Lead intake credential: Option A vs Option B (decision record)
 
-Status: **recommendation made, nothing verified against Supabase, nothing created remotely.**
+Status (2026-10-30): **the `lead_intake` role exists on the DEV project (migration `20261030110000_lead_intake_role.sql` applied with the owner's approval) but cannot log in and has no password. The pooler connection is NOT yet verified.** Verified live right after applying: `login=false`, not superuser, no BYPASSRLS, no role memberships, connection limit 5, `statement_timeout=5s`, `search_path=''`, `EXECUTE` on `public.submit_lead` only (no other function in `public` or `private`), `USAGE` on schema `public` only (not `private`), no privilege on any table.
 Owner decision (recorded): prefer Option B, but do not assume it works until verified.
 
 ## 1. The problem
@@ -70,6 +70,23 @@ What remains needs remote changes, so it has not been started:
 2. You set the password and enable login yourself with psql `\password lead_intake`, then `alter role lead_intake with login`. I cannot do this safely: it needs a password only you may know, and running it through the Management API would put the plaintext into a statement.
 3. You add `LEAD_INTAKE_DATABASE_URL` to `.env.local`.
 4. A verification script (needs a Postgres driver such as `postgres`, not installed yet) then runs pass criteria 2, 4, 5 and 6 without printing the URL. Criterion 3 creates a fake lead, which is a remote write and needs a separate go-ahead; you remove it as owner.
+
+### Credential setup (run by you; nothing is typed into chat)
+
+`psql` is not installed on this machine, so the documented `password` route is replaced by a script that does the same thing: `scripts/setup-intake-credential.mjs`. It generates a 32-byte random password locally, sends only its **SCRAM-SHA-256 verifier** in `alter role lead_intake with login password '<verifier>'` (this is what `password` sends; the verifier format is covered by a test against the RFC 7677 vector and was confirmed to be stored verbatim by Postgres), writes `LEAD_INTAKE_DATABASE_URL` (transaction-mode pooler, port 6543, user `lead_intake.<ref>`) to `.env.local` without printing it, and refuses to run if the variable already exists. If the file write fails it switches login off again.
+
+In your terminal, in the project folder:
+
+```powershell
+npm run setup:intake -- --check   # optional: validates the preconditions, changes nothing (already run once: passes)
+npm run setup:intake              # type YES when asked
+npm run check:env                 # shape checks only (user, host, port); prints no values
+npm run verify:intake             # read-only checks through the real pooler
+```
+
+`verify:intake` connects as `lead_intake`, confirms `current_user` and the 5 s timeout, confirms it can execute `submit_lead` (without calling it), confirms reads of `leads` and `profiles`, `private.settings`, `create table`, `record_lead_export` and `private.is_owner` are all refused with SQLSTATE 42501, then repeats the connection on the other pooler mode (5432 / 6543). It stops at the first login failure and does not retry (repeated failures can trigger Supabase's network bans). It creates no lead.
+
+Not covered by that script, still manual: idle reconnect after 10 minutes, five concurrent connections, password rotation (criteria 6 and 7), and the first real lead. **No real lead will be created without your explicit go-ahead for that test.** Never put the URL in chat; for deployment copy it from `.env.local` into the host's secret store yourself.
 
 ## 3. If Option B cannot be used safely
 
