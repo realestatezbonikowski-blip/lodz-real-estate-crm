@@ -300,6 +300,10 @@ describe("owner", () => {
     assert.deepEqual(a, [{ actor_id: OWNER, details: { rows: 5, scope: "all" } }]);
     await assertFails(owner, "select public.record_lead_export(5, 'jan@example.com')", [], "22023");
     await assertFails(owner, "select public.record_lead_export(-1, 'all')", [], "22023");
+    // NULL must be rejected too: `null not in (...)` is NULL, which an IF treats as false.
+    await assertFails(owner, "select public.record_lead_export(5, null)", [], "22023");
+    await assertFails(owner, "select public.record_lead_export(null, 'all')", [], "22023");
+    assert.equal((await su("select count(*)::int as n from public.audit_log where action = 'lead.export'")).rows[0].n, 1);
   });
 
   test("still cannot write the audit log or forge history", async () => {

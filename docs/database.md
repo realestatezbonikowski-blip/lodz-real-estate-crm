@@ -1,6 +1,6 @@
 # Database and security design (Phase 1A, revised in Phase 1B; draft for review)
 
-Status: **migrations are written and tested locally. Nothing has been applied to any Supabase project.**
+Status: **migrations are written, tested locally, and applied to the DEVELOPMENT Supabase project only (West EU / Ireland). Nothing has been applied to a production project.** Live checks on the dev project are recorded in [`security-review-phase-1b.md`](security-review-phase-1b.md) section 5a; several checks are still unverified (listed there).
 The independent review, findings, secret-key analysis and live-test checklist are in
 [`security-review-phase-1b.md`](security-review-phase-1b.md). Dev project region: West EU (Ireland), `eu-west-1`.
 
@@ -14,6 +14,7 @@ Migrations (`supabase/migrations/`, applied in filename order):
 | `20261029120000_core_schema.sql` | Enums, tables, constraints, indexes, `updated_at` trigger, RLS enabled on every table |
 | `20261029120100_security_policies.sql` | Revokes Supabase's default grants, helper functions, triggers, RLS policies, column grants, `record_lead_export` |
 | `20261029120200_submit_lead.sql` | `public.submit_lead()`, executable by `service_role` only |
+| `20261030100000_record_lead_export_null_scope.sql` | Fix found in review: `public.record_lead_export()` accepted a NULL `p_scope` (`NULL not in (...)` is NULL, and an `IF` treats that as false). Redefines only that function; its owner and grants are unchanged. Applied to dev after the first three. |
 
 ## 1. Schema
 
@@ -133,7 +134,7 @@ Do not apply to a production project. Nothing here has been done yet.
 2. Confirm `npm run test:db` passes on the exact files to be applied, and the working tree is committed or at least reviewed.
 3. `npx supabase init` (creates `supabase/config.toml`; review it, nothing remote happens).
 4. `npx supabase login`, then `npx supabase link --project-ref <ref>`. You enter the database password yourself in the terminal; never paste it into chat.
-5. `npx supabase db push --dry-run --linked --skip-vault` and read the list of migrations it would apply. It should list exactly three, in filename order; anything else is a stop. It prints file names only, not SQL, so the real review is reading the files. `--skip-vault` is needed because `db push` otherwise updates Vault secrets from `config.toml`. Do not use `--password`, `--db-url`, `--include-all`, `--include-seed` or `--include-roles`, and never run `supabase config push`.
+5. `npx supabase db push --dry-run --linked --skip-vault` and read the list of migrations it would apply. It should list exactly the migrations in `supabase/migrations/` that the target has not applied yet, in filename order (a fresh project: all four); anything else is a stop. It prints file names only, not SQL, so the real review is reading the files. `--skip-vault` is needed because `db push` otherwise updates Vault secrets from `config.toml`. Do not use `--password`, `--db-url`, `--include-all`, `--include-seed` or `--include-roles`, and never run `supabase config push`.
 6. Only after a separate explicit go-ahead: `npx supabase db push --linked --skip-vault`. If it errors partway, stop and report the error text instead of re-running. See `docs/dev-migration-runbook.md` (Stages 3 and 4), which is the authoritative procedure.
 7. Dashboard → Auth: signups disabled; create the first user. Then bootstrap the owner in the SQL editor (this is deliberately not a migration):
    ```sql

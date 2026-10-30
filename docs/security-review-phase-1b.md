@@ -115,9 +115,42 @@ Run these after the migrations are applied to the dev project, and record the re
 8. **Dashboard Security Advisor and Performance Advisor.** Expect the two public `SECURITY DEFINER` functions to be reported; they are intentional and self-checking.
 9. **Backups.** What the dev plan provides, and a restore test before production.
 
+## 5a. Live results: dev project, 2026-10-30
+
+How: `supabase db query --linked` (read-only SQL via the Management API; role-impersonation probes ran inside `begin read only … rollback`), `supabase db advisors --linked`, and `npm run live:anon` (publishable key, no login). No keys or passwords were printed. Dev project only; **this is not production verification, and nothing here is a GDPR or production-readiness statement.**
+
+| Item (section 5 number) | Result | Evidence |
+|---|---|---|
+| 1 Roles and ownership | PASS | `anon`/`authenticated` no bypass; `postgres`/`service_role` bypass RLS; no superuser; all 6 tables owned by `postgres`, RLS on, `FORCE` off |
+| Function ACLs | PASS | `submit_lead`: `service_role`, `postgres` only. `record_lead_export`: `authenticated`, `service_role`, `postgres`. Two helpers: `authenticated`, `postgres`. All other private functions: owner only. No `PUBLIC` entry. All definer functions `search_path=""` |
+| `anon` privileges | PASS | 0 table grants, 0 column grants, 0 executable functions; probes as `anon` refused (`permission denied`) for `leads`, `submit_lead`, `record_lead_export`, schema `private` |
+| `authenticated` grants | PASS | Matches the migration. Nothing on `private.settings`. `leads` INSERT = exactly the 10 intended columns; UPDATE = the 9 intended. `profiles`/`projects` INSERT lists every column because the grant is table-level; RLS restricts it to the owner |
+| Policies | PASS | 15 policies, all `TO authenticated` |
+| Signed-in user without a profile | PASS | `is_active_staff()` and `is_owner()` false; `record_lead_export` raises `forbidden`; `submit_lead` and `private.settings` refused |
+| Foreign-key delete rules | PASS | As documented in section 1 of `docs/database.md` |
+| 2 Default privileges | PASS for our objects, informational otherwise | `postgres` defaults in `public` grant only `postgres` and `service_role`. `supabase_admin` defaults in `public` still grant `anon`/`authenticated`/`service_role`, but apply only to objects `supabase_admin` creates (none exist) |
+| 3 PostgREST (anonymous) | PASS | `npm run live:anon`: reads of the 5 tables HTTP 401; direct lead insert 401 (empty body, cannot create a row); `rpc/submit_lead` and `rpc/record_lead_export` 404; `rpc/is_owner` 404. Row counts afterwards: `leads` 0, `audit_log` 0. Not checked: what status an RLS-filtered `UPDATE`/`DELETE` returns for staff (needs a staff login) |
+| 4 Realtime | PASS | No rows from `public`/`private` in the publication |
+| 4 GraphQL | PASS (extension absent) | `pg_graphql` is not installed (extensions: `pg_stat_statements`, `pgcrypto`, `plpgsql`, `supabase_vault`, `uuid-ossp`) |
+| 6 Postgres version | PASS | PostgreSQL 17.11; all four migrations applied without error |
+| Settings | PASS | `intake.max_web_leads_per_hour` = 100, `intake.duplicate_window_minutes` = 10 |
+| Migration history | PASS | Four rows, matching `supabase/migrations/` |
+| 8 Advisors | PASS, as expected | One WARN: `authenticated` can execute `public.record_lead_export` (intentional, owner-checked inside). INFO: `private.settings` RLS without policy (intentional), `leads_created_by_fkey` without a covering index, 10 unused indexes on empty tables |
+| Accepted risk M2 | CONFIRMED, not changed | `service_role` has select/insert/update/delete on `audit_log` and `lead_activities` (Supabase default grants). "Append-only" holds for `anon`/`authenticated` only. Whether to revoke from `service_role` is deferred to the Option A/B decision |
+
+**Defect found and fixed:** `record_lead_export` accepted a NULL `p_scope`. Fixed by `20261030100000_record_lead_export_null_scope.sql` (new migration, applied to dev after a dry-run listed only it). Regression test: the export test in `rls.test.mjs` now also rejects a NULL scope and a NULL row count. The test failed before the fix. After applying: the live function body contains the NULL check and its ACL and owner are unchanged.
+
+**Still unverified:**
+- Auth dashboard settings: email signups disabled; anonymous sign-ins disabled; TOTP available (item 5).
+- Data API exposed schemas: only `public` (item 4). The Advisor confirms `public` is exposed; `private` was not probed through REST.
+- Staff behaviour with real accounts: assistant/owner permissions through the API, the status returned by an RLS-filtered `UPDATE`/`DELETE`, the real `aal` claim after TOTP enrolment (items 3 and 5).
+- Option A secret-key behaviour and Option B pooler login (item 7).
+- Backups and a restore test (item 9).
+- The first owner has not been created; `profiles` is empty.
+
 ## 6. Proposed safe migration procedure (for later approval)
 
-Nothing below has been done. Each step needs your explicit go-ahead.
+Steps 1–7 below have been done for the **dev project** (the migration set is now four files). Steps 8 onward are not done. Each remaining step needs your explicit go-ahead.
 
 1. Decide D1–D3 and Option A or B for intake (section 7).
 2. Review the three migration files and the two `planned/` files once more. Optionally commit locally (only when you ask me to).

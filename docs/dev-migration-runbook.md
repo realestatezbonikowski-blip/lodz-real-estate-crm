@@ -1,6 +1,6 @@
 # Runbook: applying the migrations to the DEVELOPMENT Supabase project
 
-Status: **prepared, not executed.** Nothing below has been run. Each stage needs your explicit go-ahead.
+Status (dev project): **Stages 1–4 done** (CLI installed and linked; the first three migrations applied; the fourth, `20261030100000_record_lead_export_null_scope`, applied on 2026-10-30 after a dry-run that listed only it). **Stage 6a/6b partly done** (read-only inventory, role-impersonation probes in read-only transactions, Advisors, `npm run live:anon`); results are in `docs/security-review-phase-1b.md` section 5a. **Not done:** Stage 5 (first owner), 6c, the dashboard Auth/Data API checks, Option B. Each remaining stage needs your explicit go-ahead. For a fresh project (for example production) the steps below apply as written, with all four migrations.
 Target: development project, West EU (Ireland), `eu-west-1`. Never run this against a production project.
 
 Rules for the whole procedure
@@ -12,7 +12,7 @@ Rules for the whole procedure
 
 - [ ] `npm run test:db` passes on exactly the files you are about to apply (98 tests at the time of writing).
 - [ ] `npm run lint`, `npm run typecheck`, `npm run build` pass.
-- [ ] You have read the three files in `supabase/migrations/` once more. **The dry-run prints only migration file names, not their SQL**, so this reading is the real review.
+- [ ] You have read the files in `supabase/migrations/` (four at the time of writing) once more. **The dry-run prints only migration file names, not their SQL**, so this reading is the real review.
 - [ ] In the Supabase dashboard: Authentication → email signups are **disabled**; anonymous sign-ins are **disabled**.
 - [ ] `.env.local` exists; `npm run check:env` is all ✔.
 - [ ] You can see the dev project's region (`eu-west-1`) and project ref in the dashboard, and the project contains **no data you care about**.
@@ -55,7 +55,7 @@ npx supabase db push --dry-run --linked --skip-vault
 `--skip-vault` matters: per the CLI help, `db push` otherwise updates Vault secrets from `config.toml` before migrations. `--linked` makes the target explicit. Never add `--include-all`, `--include-seed`, `--include-roles`, `--db-url` or `--password`. The CLI will ask for the database password; type it there.
 
 Inspect the output:
-- It should list **exactly three** migrations, in this order: `20261029120000_core_schema`, `20261029120100_security_policies`, `20261029120200_submit_lead`. Anything else (extra migrations, "already applied", a different project) is a stop.
+- On a fresh project it should list **exactly four** migrations, in this order: `20261029120000_core_schema`, `20261029120100_security_policies`, `20261029120200_submit_lead`, `20261030100000_record_lead_export_null_scope`. On a project that already has some applied, it lists only the rest. Anything else (extra migrations, "already applied", a different project) is a stop.
 - It does not show SQL and does not validate permissions. Per Supabase's CLI reference the real run also creates the history table `supabase_migrations.schema_migrations` on first use.
 - `supabase/planned/` files are not listed (they are not in `migrations/`). If they appear, stop.
 
