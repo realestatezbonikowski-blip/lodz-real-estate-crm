@@ -1,20 +1,27 @@
 // POST /api/leads: the only public write path. All privileged work happens here, on the server.
 //
-// The intake credential (Option B role or Option A key) is NOT wired yet: until the Option B
-// verification passes (docs/lead-intake-credential.md) the submitter is null, so after validation
-// this endpoint answers 503 "unavailable" and stores nothing. It never falls back to another key.
+// Intake credential: only Option B (LEAD_INTAKE_DATABASE_URL, the least-privilege `lead_intake`
+// role) is implemented, and that variable must be set only after the live verification in
+// docs/lead-intake-credential.md has passed. With nothing configured, with both credentials set,
+// or with only the Option A secret key, the submitter is null: after validation the endpoint
+// answers 503 "unavailable" and stores nothing. It never falls back to another credential.
 import { NextResponse } from "next/server";
-import { PRIVACY_NOTICE_VERSION } from "@/features/leads/config";
+import { PRIVACY_NOTICE_VERSION, resolveIntakeMode } from "@/features/leads/config";
 import { handleLeadSubmission, type LeadSubmitter } from "@/features/leads/handler";
+import { createLeadSubmitter, createPostgresRunner } from "@/features/leads/server/postgres-submitter";
 import { createRateLimiter } from "@/lib/security/rate-limit";
 import { createTurnstileVerifier } from "@/lib/security/turnstile";
+
+export const runtime = "nodejs";
 
 // Per instance, best effort (see rate-limit.ts). 5 attempts per client per 10 minutes.
 const limiter = createRateLimiter({ windowMs: 10 * 60_000, max: 5, maxKeys: 5000 });
 const verifyTurnstile = createTurnstileVerifier(process.env.TURNSTILE_SECRET_KEY);
 
-// Set once the Option B adapter exists and has passed live verification.
-const submitter: LeadSubmitter | null = null;
+const submitter: LeadSubmitter | null =
+  resolveIntakeMode(process.env) === "option-b" && process.env.LEAD_INTAKE_DATABASE_URL
+    ? createLeadSubmitter(createPostgresRunner(process.env.LEAD_INTAKE_DATABASE_URL))
+    : null;
 
 function allowedOrigin(): string | null {
   try {

@@ -1,23 +1,256 @@
 @import "tailwindcss";
 
-/* Neutral placeholder tokens. Brand colours are applied here once the identity is final. */
+/*
+ * PROVISIONAL visual system. The real brand identity has not been confirmed, so every colour and
+ * type choice lives in these tokens and can be swapped in one place.
+ *
+ * Direction: warm limestone paper, ink text, one terracotta accent used sparingly, and a single
+ * deep-stone panel for contrast. Light-first by design (not an all-dark site).
+ * Contrast (WCAG AA, computed): ink on paper ~15:1, muted on paper ~6.4:1, accent on paper ~5.6:1,
+ * white on accent ~6.4:1, paper on stone ~13:1.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #111827;
-  --muted: #4b5563;
-  --border: #e5e7eb;
+  --paper: #f4f0e8;
+  --paper-deep: #ebe5d8;
+  --ink: #1a1812;
+  --muted: #5a554a;
+  --line: #d6cebd;
+  --accent: #9c4426;
+  --stone: #25302b;
+
+  /* Motion (curves from the design-engineering guidance: built-in CSS easings are too weak). */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
   --color-muted: var(--muted);
-  --color-border: var(--border);
+  --color-border: var(--line);
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-ink: var(--ink);
+  --color-accent: var(--accent);
+  --color-stone: var(--stone);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display-face), "Cormorant Garamond", Georgia, serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--paper);
+  color: var(--ink);
   font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+@layer components {
+  .wrap {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 72rem;
+    padding-inline: 1.25rem;
+  }
+  @media (min-width: 768px) {
+    .wrap {
+      padding-inline: 2rem;
+    }
+  }
+
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .display {
+    font-family: var(--font-display-face), "Cormorant Garamond", Georgia, serif;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    line-height: 1.02;
+  }
+
+  .tag {
+    display: inline-block;
+    border: 1px solid var(--line);
+    padding: 0.2rem 0.6rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* Pressable things: 44px minimum target, instant press feedback, hover only for fine pointers. */
+  .btn {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.4rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border: 1px solid var(--ink);
+    transition:
+      transform 160ms var(--ease-out),
+      background-color 160ms ease,
+      color 160ms ease,
+      border-color 160ms ease;
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink);
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .btn-ghost:hover:not(:disabled) {
+      background: var(--ink);
+      color: var(--paper);
+    }
+  }
+
+  .link {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.3em;
+    transition: color 160ms ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .link:hover {
+      color: var(--accent);
+    }
+  }
+
+  .card {
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--paper) 60%, white);
+    transition:
+      transform 220ms var(--ease-out),
+      border-color 220ms ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .card-lift:hover {
+      transform: translateY(-3px);
+      border-color: var(--ink);
+    }
+  }
+
+  .field {
+    width: 100%;
+    min-height: 2.75rem;
+    border: 1px solid var(--ink);
+    background: #fff;
+    padding: 0.6rem 0.8rem;
+    font-size: 1rem;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+  }
+  .field[aria-invalid="true"] {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * Motion. All of it is decoration; nothing is required to read or use the page.
+ * ------------------------------------------------------------------------------------------- */
+
+/* One-time load-in for secondary hero items. The headline itself is NOT animated: it is the LCP
+ * element and must paint immediately. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 700ms var(--ease-out) both;
+  animation-delay: var(--delay, 0ms);
+}
+
+/* Architectural image reveal: clip from the bottom edge. */
+@keyframes clip-reveal {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+.clip-reveal {
+  animation: clip-reveal 1100ms var(--ease-in-out) both;
+}
+
+/* Scroll-linked reveal, CSS only (no JS, no layout shift). Browsers without scroll-driven
+ * animations simply show the content. Stagger siblings with --delay-free utility order. */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 35%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .rise,
+  .clip-reveal,
+  .reveal {
+    animation: none;
+  }
+  .btn,
+  .card {
+    transition-duration: 0.01ms;
+  }
+  .btn:active {
+    transform: none;
+  }
 }

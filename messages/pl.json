@@ -3,42 +3,106 @@
     "title": "Nowe mieszkania w Łodzi",
     "description": "Strona inwestycji mieszkaniowej w Łodzi – w przygotowaniu."
   },
+  "A11y": {
+    "skipToContent": "Przejdź do treści",
+    "openMenu": "Otwórz menu",
+    "closeMenu": "Zamknij menu"
+  },
   "Nav": {
     "label": "Menu główne",
-    "brandPlaceholder": "[Nazwa firmy – do uzupełnienia]",
+    "home": "Strona główna",
+    "brandPlaceholder": "[Nazwa dewelopera]",
     "projects": "Inwestycje",
     "contact": "Kontakt"
   },
   "Footer": {
+    "companyTitle": "Deweloper",
     "companyPlaceholder": "[Dane firmy i kontakt – do uzupełnienia]",
-    "legalPlaceholder": "[Polityka prywatności i informacje prawne – oczekują na zatwierdzenie]"
+    "pagesTitle": "Strona",
+    "legalTitle": "Informacje prawne",
+    "privacy": "Polityka prywatności",
+    "legalPlaceholder": "[Pozostałe informacje prawne – oczekują na zatwierdzenie]",
+    "draftNote": "Strona jest w przygotowaniu. Treści mają charakter roboczy."
+  },
+  "Placeholder": {
+    "badge": "Treść do uzupełnienia"
   },
   "Home": {
+    "eyebrow": "Łódź",
     "heading": "Nowe mieszkania w Łodzi",
-    "status": "Strona jest w trakcie przygotowania. Treści na niej to wersje robocze.",
-    "cta": "Zobacz inwestycje"
+    "lead": "Inwestycja Rodomska. Strona jest w przygotowaniu, a kolejne informacje pojawią się po ich zatwierdzeniu.",
+    "ctaProject": "Poznaj inwestycję",
+    "ctaContact": "Zostaw kontakt",
+    "visualLabel": "Abstrakcyjna ilustracja kompozycji architektonicznej",
+    "visualCaption": "Ilustracja abstrakcyjna. Nie przedstawia projektu.",
+    "identityEyebrow": "Deweloper",
+    "identityTitle": "[Tożsamość i misja dewelopera]",
+    "identityBody": "[Tutaj pojawi się opis dewelopera i jego podejścia do inwestycji. Treść zostanie dodana po dostarczeniu zatwierdzonych informacji.]",
+    "overviewEyebrow": "Inwestycja",
+    "overviewBody": "[Krótki opis inwestycji – do uzupełnienia po dostarczeniu zatwierdzonych danych.]",
+    "factsTitle": "Najważniejsze informacje",
+    "factsNote": "Dane są w trakcie weryfikacji. Do czasu ich potwierdzenia nie publikujemy liczb, cen ani terminów.",
+    "overviewLink": "Zobacz stronę inwestycji",
+    "contactTitle": "Zostaw kontakt",
+    "contactBody": "Wypełnij formularz, a odpowiemy na pytania o inwestycję.",
+    "contactLink": "Przejdź do formularza"
   },
   "Projects": {
     "title": "Inwestycje",
-    "intro": "Treści poniżej są przykładowe i nie opisują prawdziwej inwestycji.",
-    "placeholderBadge": "Przykład – dane robocze",
+    "intro": "Informacje o inwestycjach pojawią się tutaj po ich zatwierdzeniu.",
     "details": "Szczegóły",
     "enquiryTitle": "Zapytaj o inwestycję",
+    "provisional": "Dane wstępne, w trakcie weryfikacji",
     "status": {
       "planning": "W przygotowaniu",
       "selling": "W sprzedaży",
       "completed": "Zakończona"
     },
     "items": {
-      "example-project": {
-        "name": "[Przykładowa inwestycja]",
-        "summary": "[Opis inwestycji – do uzupełnienia po dostarczeniu danych.]"
+      "rodomska": {
+        "name": "Rodomska",
+        "summary": "[Opis inwestycji – do uzupełnienia po dostarczeniu zatwierdzonych danych.]"
       }
+    },
+    "facts": {
+      "location": "Lokalizacja",
+      "units": "Liczba mieszkań",
+      "floors": "Kondygnacje",
+      "completion": "Termin realizacji",
+      "pricing": "Ceny"
+    },
+    "factPending": "Do potwierdzenia",
+    "unitsTitle": "Mieszkania",
+    "unitsEmpty": "Zestawienie mieszkań (metraże, piętra, dostępność i ceny) zostanie opublikowane po zatwierdzeniu danych.",
+    "mediaTitle": "Wizualizacje i plany",
+    "mediaIntro": "Materiały graficzne zostaną dodane po ich zatwierdzeniu. Każdy z nich będzie opisany jako wizualizacja, szkic, rzut lub zdjęcie.",
+    "mediaPending": "Materiał w przygotowaniu",
+    "media": {
+      "visualization": "Wizualizacja",
+      "sketch": "Szkic architektoniczny",
+      "floorplan": "Rzut",
+      "photo": "Zdjęcie"
     }
   },
   "Contact": {
     "title": "Kontakt",
-    "intro": "Zostaw dane, a skontaktujemy się z Tobą."
+    "intro": "Zostaw dane, a skontaktujemy się z Tobą.",
+    "detailsTitle": "Dane kontaktowe",
+    "address": "Adres",
+    "phone": "Telefon",
+    "email": "E-mail",
+    "hours": "Godziny kontaktu",
+    "pending": "[Do uzupełnienia]",
+    "formTitle": "Formularz kontaktowy"
+  },
+  "Privacy": {
+    "title": "Polityka prywatności",
+    "body": "Treść polityki prywatności nie została jeszcze zatwierdzona. Ta strona jest tymczasowa i nie stanowi informacji prawnej."
+  },
+  "NotFound": {
+    "title": "Nie znaleziono strony",
+    "body": "Strona, której szukasz, nie istnieje lub została przeniesiona.",
+    "back": "Wróć na stronę główną"
   },
   "LeadForm": {
     "firstName": "Imię",
@@ -51,6 +115,7 @@
     "success": "Dziękujemy. Skontaktujemy się z Tobą.",
     "privacyPlaceholder": "[Informacja o przetwarzaniu danych osobowych – tekst oczekuje na zatwierdzenie prawne.]",
     "notConfigured": "Weryfikacja antyspamowa nie jest skonfigurowana. Formularz jest nieaktywny.",
+    "fieldError": "Sprawdź to pole.",
     "errors": {
       "invalid": "Sprawdź zaznaczone pola i spróbuj ponownie.",
       "invalid_project": "Ta inwestycja nie przyjmuje obecnie zapytań.",

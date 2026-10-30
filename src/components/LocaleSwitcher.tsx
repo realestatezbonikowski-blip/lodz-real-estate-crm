@@ -4,7 +4,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 
-const LABELS = { pl: "Polski", uk: "Українська", en: "English" } as const;
+const LABELS = { pl: "PL", uk: "UA", en: "EN" } as const;
+const NAMES = { pl: "Polski", uk: "Українська", en: "English" } as const;
 
 export function LocaleSwitcher() {
   const t = useTranslations("LocaleSwitcher");
@@ -13,7 +14,7 @@ export function LocaleSwitcher() {
 
   return (
     <nav aria-label={t("label")}>
-      <ul className="flex gap-4 text-sm">
+      <ul className="flex text-sm">
         {routing.locales.map((locale) => (
           <li key={locale}>
             <Link
@@ -21,12 +22,10 @@ export function LocaleSwitcher() {
               locale={locale}
               hrefLang={locale}
               lang={locale}
+              title={NAMES[locale]}
+              aria-label={NAMES[locale]}
               aria-current={locale === current ? "true" : undefined}
-              className={
-                locale === current
-                  ? "font-semibold underline underline-offset-4"
-                  : "text-muted hover:text-foreground"
-              }
+              className="inline-flex min-h-11 min-w-11 items-center justify-center tracking-wider text-muted aria-[current=true]:font-semibold aria-[current=true]:text-ink aria-[current=true]:underline aria-[current=true]:underline-offset-8 hover:text-ink"
             >
               {LABELS[locale]}
             </Link>

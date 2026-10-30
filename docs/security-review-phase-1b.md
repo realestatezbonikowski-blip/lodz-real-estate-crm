@@ -70,7 +70,7 @@ Ways it could leak, and mitigations:
 
 ### Option B: dedicated least-privilege database role (recommended if it works live)
 
-`supabase/planned/lead_intake_role.sql` creates a role `lead_intake` that can execute `submit_lead` and nothing else (no table access, no schema `private`, no bypass of RLS, member of no role). The server connects to Postgres directly with it. A leaked credential could only submit junk leads, which the circuit breaker bounds.
+The migration `20261030110000_lead_intake_role.sql` (prepared, not applied) creates a role `lead_intake` that can execute `submit_lead` and nothing else (no table access, no schema `private`, no bypass of RLS, member of no role). The server connects to Postgres directly with it. A leaked credential could only submit junk leads, which the circuit breaker bounds.
 
 Locally tested: it can submit and is denied on every table, `record_lead_export` and `private`. **Not proven live:** whether a custom role can connect through Supabase's pooler, what the serverless connection behaviour is, and the extra driver dependency. Decide in Phase 3 after a live test; fall back to Option A with the mitigations above.
 

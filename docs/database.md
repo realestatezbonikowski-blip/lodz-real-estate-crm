@@ -4,8 +4,8 @@ Status: **migrations are written, tested locally, and applied to the DEVELOPMENT
 The independent review, findings, secret-key analysis and live-test checklist are in
 [`security-review-phase-1b.md`](security-review-phase-1b.md). Dev project region: West EU (Ireland), `eu-west-1`.
 
-Not migrations, not applied: `supabase/planned/mfa_enforcement.sql` (future MFA requirement) and
-`supabase/planned/lead_intake_role.sql` (least-privilege intake role, Option B).
+Not a migration, not applied: `supabase/planned/mfa_enforcement.sql` (future MFA requirement).
+Prepared but NOT yet applied to any project: migration `20261030110000_lead_intake_role.sql` (least-privilege intake role, Option B; creates a `NOLOGIN` role with no password; applying it needs the owner's approval).
 
 Migrations (`supabase/migrations/`, applied in filename order):
 

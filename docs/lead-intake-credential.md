@@ -9,7 +9,7 @@ Owner decision (recorded): prefer Option B, but do not assume it works until ver
 
 ## 2. Option B: dedicated `lead_intake` database role
 
-File: `supabase/planned/lead_intake_role.sql` (not a migration, not applied).
+File: `supabase/migrations/20261030110000_lead_intake_role.sql` (prepared and tested locally; **not applied to any project**; it was moved from `supabase/planned/` so the tests cover the exact file that would be pushed). The server adapter is `src/features/leads/server/postgres-submitter.ts` and is wired in `src/app/api/leads/route.ts` only when `LEAD_INTAKE_DATABASE_URL` is set, which must happen only after the live pass criteria below.
 
 ### How the role would authenticate
 
@@ -60,6 +60,10 @@ TLS: use at least `sslmode=require`; prefer `verify-full` with Supabase's root c
 ### Verification plan and current blocker (2026-10-30)
 
 Known without any remote change: the linked project's shared pooler host is `aws-0-eu-west-1.pooler.supabase.com` (recorded by the CLI in `supabase/.temp/pooler-url`, no password in it); the Postgres server is 17.11; the role's privileges are already proven locally (`hardening.test.mjs`).
+
+Update (Phase 2 implementation): steps 1 and the adapter below are now prepared locally. The migration exists and is covered by the local tests (the role is `NOLOGIN`, has no password, connection limit 5, `statement_timeout` 5s, and can execute `submit_lead` only). `postgres` (postgres.js) was added as the driver; the adapter uses no prepared statements, a pool of 2 and TLS `require`. `npm run check:env` validates the connection-string shape without printing it. A read-only `supabase db push --dry-run --linked --skip-vault` lists exactly this one pending migration. Nothing was applied.
+
+**Approval request (remote change), exact operation:** `npx supabase db push --linked --skip-vault` applying `20261030110000_lead_intake_role.sql` to the DEV project. Impact: creates one cluster-level role `lead_intake` (NOLOGIN, cannot connect); no table, function or policy changes; no data touched. Rollback: `revoke execute on function public.submit_lead(text,text,text,text,text,text,text,text,text,text,text,text,text) from lead_intake; revoke usage on schema public from lead_intake; drop role lead_intake;` (run as the project owner; nothing depends on the role while it has no login).
 
 What remains needs remote changes, so it has not been started:
 1. A new migration creating `lead_intake` `NOLOGIN` (a copy of the planned file; the planned file would then be removed and the local tests adjusted, because the tests currently apply the planned file on top of the migrations). Nothing is created until you approve the exact file.

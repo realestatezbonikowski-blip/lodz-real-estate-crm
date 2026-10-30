@@ -55,7 +55,22 @@ console.log(env.SUPABASE_SECRET_KEY ? "• SUPABASE_SECRET_KEY is set (server-on
 
 // Lead intake: exactly one server credential, never both (docs/lead-intake-credential.md).
 if (env.SUPABASE_SECRET_KEY && env.LEAD_INTAKE_DATABASE_URL) bad("Both SUPABASE_SECRET_KEY and LEAD_INTAKE_DATABASE_URL are set. Configure exactly one; there is no fallback");
-else console.log(env.LEAD_INTAKE_DATABASE_URL ? "• LEAD_INTAKE_DATABASE_URL is set (Option B, server-only)" : "• LEAD_INTAKE_DATABASE_URL not set (Option B not configured)");
+else if (!env.LEAD_INTAKE_DATABASE_URL) console.log("• LEAD_INTAKE_DATABASE_URL not set (Option B not configured; enquiries are refused with 503)");
+else {
+  // Shape checks only. Nothing from the URL is printed.
+  let u = null;
+  try { u = new URL(env.LEAD_INTAKE_DATABASE_URL); } catch {}
+  if (!u || !/^postgres(ql)?:$/.test(u.protocol)) bad("LEAD_INTAKE_DATABASE_URL is not a postgres:// URL");
+  else {
+    const user = decodeURIComponent(u.username);
+    if (/^lead_intake\.[a-z0-9]{20}$/.test(user)) ok("LEAD_INTAKE_DATABASE_URL user is lead_intake.<project-ref>");
+    else bad("LEAD_INTAKE_DATABASE_URL user must be lead_intake.<20-char project ref> (never postgres or another role)");
+    if (u.password) ok("LEAD_INTAKE_DATABASE_URL has a password"); else bad("LEAD_INTAKE_DATABASE_URL has no password");
+    if (u.hostname.endsWith(".pooler.supabase.com")) ok("LEAD_INTAKE_DATABASE_URL host is the shared pooler");
+    else bad("LEAD_INTAKE_DATABASE_URL host is not a *.pooler.supabase.com host (the direct host is IPv6-only)");
+    if (u.port === "6543" || u.port === "5432") ok(`LEAD_INTAKE_DATABASE_URL port is ${u.port}`); else bad("LEAD_INTAKE_DATABASE_URL port should be 6543 (transaction mode) or 5432");
+  }
+}
 
 // Turnstile: the site key is public, the secret must not be.
 console.log(env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? "• NEXT_PUBLIC_TURNSTILE_SITE_KEY is set" : "• NEXT_PUBLIC_TURNSTILE_SITE_KEY not set (the enquiry form stays disabled)");

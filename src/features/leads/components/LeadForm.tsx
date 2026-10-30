@@ -7,11 +7,58 @@ import { TurnstileWidget } from "./TurnstileWidget";
 // Public key by design (NEXT_PUBLIC_). The matching secret is server-only and never reaches this file.
 const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
+type ErrorCode = "invalid" | "invalid_project" | "verification" | "busy" | "unavailable";
 type State =
   | { kind: "idle" }
   | { kind: "sending" }
   | { kind: "success" }
-  | { kind: "error"; code: "invalid" | "invalid_project" | "verification" | "busy" | "unavailable"; fields: string[] };
+  | { kind: "error"; code: ErrorCode; fields: string[] };
+
+type FieldProps = {
+  name: string;
+  label: string;
+  type?: string;
+  required?: boolean;
+  maxLength: number;
+  autoComplete: string;
+  inputMode?: "tel" | "email" | "text";
+  rows?: number;
+  invalid: boolean;
+  errorText: string;
+};
+
+// Defined at module level on purpose: a component declared inside LeadForm would be re-created on
+// every render, remounting the uncontrolled inputs and wiping what the visitor typed.
+function Field(props: FieldProps) {
+  const errId = `${props.name}-error`;
+  const shared = {
+    id: props.name,
+    name: props.name,
+    required: props.required,
+    maxLength: props.maxLength,
+    autoComplete: props.autoComplete,
+    "aria-invalid": props.invalid || undefined,
+    "aria-describedby": props.invalid ? errId : undefined,
+    className: "field",
+  };
+  return (
+    <div>
+      <label htmlFor={props.name} className="mb-1 block text-sm">
+        {props.label}
+      </label>
+      {props.rows ? (
+        <textarea {...shared} rows={props.rows} />
+      ) : (
+        <input {...shared} type={props.type ?? "text"} inputMode={props.inputMode} />
+      )}
+      {props.invalid && (
+        <p id={errId} className="mt-1 text-sm text-accent">
+          {props.errorText}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export function LeadForm({ projectSlug }: { projectSlug?: string }) {
   const t = useTranslations("LeadForm");
@@ -32,7 +79,7 @@ export function LeadForm({ projectSlug }: { projectSlug?: string }) {
     const utm = (k: string) => params.get(k) ?? undefined;
 
     setState({ kind: "sending" });
-    let code: Extract<State, { kind: "error" }>["code"] = "unavailable";
+    let code: ErrorCode = "unavailable";
     let fields: string[] = [];
     try {
       const res = await fetch("/api/leads", {
@@ -76,38 +123,21 @@ export function LeadForm({ projectSlug }: { projectSlug?: string }) {
 
   if (state.kind === "success") {
     return (
-      <p role="status" className="rounded-md border border-border p-4">
+      <p role="status" className="card p-6 text-lg">
         {t("success")}
       </p>
     );
   }
 
-  const input = "mt-1 w-full rounded-md border border-border bg-background px-3 py-2";
-
   return (
-    <form onSubmit={onSubmit} noValidate className="grid gap-4">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block text-sm">
-          {t("firstName")}
-          <input name="firstName" required maxLength={100} autoComplete="given-name" aria-invalid={bad("firstName")} className={input} />
-        </label>
-        <label className="block text-sm">
-          {t("lastName")}
-          <input name="lastName" required maxLength={100} autoComplete="family-name" aria-invalid={bad("lastName")} className={input} />
-        </label>
+    <form onSubmit={onSubmit} noValidate className="grid gap-5">
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field invalid={bad("firstName")} errorText={t("fieldError")} name="firstName" label={t("firstName")} required maxLength={100} autoComplete="given-name" />
+        <Field invalid={bad("lastName")} errorText={t("fieldError")} name="lastName" label={t("lastName")} required maxLength={100} autoComplete="family-name" />
       </div>
-      <label className="block text-sm">
-        {t("phone")}
-        <input name="phone" type="tel" required maxLength={25} autoComplete="tel" aria-invalid={bad("phone")} className={input} />
-      </label>
-      <label className="block text-sm">
-        {t("email")}
-        <input name="email" type="email" required maxLength={254} autoComplete="email" aria-invalid={bad("email")} className={input} />
-      </label>
-      <label className="block text-sm">
-        {t("message")}
-        <textarea name="message" rows={4} maxLength={2000} aria-invalid={bad("message")} className={input} />
-      </label>
+      <Field invalid={bad("phone")} errorText={t("fieldError")} name="phone" label={t("phone")} type="tel" inputMode="tel" required maxLength={25} autoComplete="tel" />
+      <Field invalid={bad("email")} errorText={t("fieldError")} name="email" label={t("email")} type="email" inputMode="email" required maxLength={254} autoComplete="email" />
+      <Field invalid={bad("message")} errorText={t("fieldError")} name="message" label={t("message")} maxLength={2000} autoComplete="off" rows={4} />
 
       {/* Honeypot: hidden from people and assistive technology; bots tend to fill it. */}
       <div aria-hidden="true" className="absolute left-[-9999px] h-0 w-0 overflow-hidden">
@@ -126,18 +156,16 @@ export function LeadForm({ projectSlug }: { projectSlug?: string }) {
       )}
 
       {state.kind === "error" && (
-        <p role="alert" className="text-sm">
+        <p role="alert" className="text-sm text-accent">
           {t(`errors.${state.code}`)}
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={!token || state.kind === "sending"}
-        className="rounded-md bg-foreground px-4 py-2 text-background disabled:opacity-50"
-      >
-        {state.kind === "sending" ? t("sending") : t("submit")}
-      </button>
+      <div>
+        <button type="submit" disabled={!token || state.kind === "sending"} className="btn btn-primary">
+          {state.kind === "sending" ? t("sending") : t("submit")}
+        </button>
+      </div>
     </form>
   );
 }

@@ -35,6 +35,10 @@
 | 30 | Public enquiry endpoint is `POST /api/leads` (route handler): origin check, per-client rate limit, size limit, honeypot, strict Zod, Turnstile, then `submit_lead` through an injected submitter. With no submitter it answers 503 and stores nothing | Phase 2. The pipeline is a pure function covered by `npm run test:unit` |
 | 31 | The endpoint also rate-limits per client address, in process memory only (never stored, logged or sent to Turnstile) | Phase 2, at the owner's request; revises row 8 ("no IP limiter initially"). Best effort on serverless; the database limits stay authoritative. Added as GDPR question 21 for the adviser |
 | 32 | Placeholder content only: project, company, legal and contact text are marked placeholders; `PRIVACY_NOTICE_VERSION = "placeholder-0"` | No real data or legal text has been supplied. The site must not launch with them (launch gate in `docs/gdpr-open-questions.md`) |
+| 33 | Provisional visual system (limestone/ink/terracotta/stone, Cormorant Garamond + Inter); motion via CSS scroll-driven reveals plus `motion` for hero parallax and the mobile menu; no GSAP | Phase 2 design. Brand not confirmed, so everything is tokenised. See `docs/content-needed.md` section 5 |
+| 34 | Option B prepared locally: role moved from `supabase/planned/` into migration `20261030110000_lead_intake_role.sql` (not applied), adapter `postgres-submitter.ts` using `postgres`, wired only when `LEAD_INTAKE_DATABASE_URL` is set | Owner preference for Option B. Remote apply, password and live verification still need explicit approval |
+| 35 | Production-only enforced CSP (same-origin + Cloudflare Turnstile, `'unsafe-inline'` scripts) and `noindex` until `NEXT_PUBLIC_ALLOW_INDEXING=true` | Placeholder content must not be indexed; a nonce CSP would force dynamic rendering |
+| 36 | Multi-instance rate limiting: database limits and Turnstile stay authoritative; add a Cloudflare rate-limit rule at deployment; no shared store | See `docs/content-needed.md` section 4 |
 
 See `docs/database.md` for the schema, authorization matrix and open database decisions, and `docs/security-review-phase-1b.md` for the review.
 

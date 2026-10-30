@@ -415,12 +415,10 @@ describe("function privileges are explicit", () => {
 });
 
 // ---------------------------------------------------------------------------------------------
-describe("planned least-privilege intake role (supabase/planned/lead_intake_role.sql)", () => {
+describe("least-privilege intake role (migration 20261030110000_lead_intake_role.sql)", () => {
   const intake = { role: "lead_intake" };
-  before(async () => {
-    await freshDb();
-    await db.exec(readFileSync(join(here, "..", "planned", "lead_intake_role.sql"), "utf8"));
-  });
+  // The role is created by the migration itself, which freshDb() applies with the others.
+  before(() => freshDb());
 
   test("it can execute submit_lead and no other function", async () => {
     const r = await su(`select n.nspname || '.' || p.proname as fn from pg_proc p join pg_namespace n on n.oid = p.pronamespace
@@ -451,8 +449,8 @@ describe("planned least-privilege intake role (supabase/planned/lead_intake_role
   });
 
   test("is not a member of any role and cannot bypass RLS", async () => {
-    const r = (await su("select rolbypassrls, rolsuper, (select count(*) from pg_auth_members m where m.member = r.oid) as memberships from pg_roles r where rolname = 'lead_intake'")).rows[0];
-    assert.deepEqual({ ...r, memberships: Number(r.memberships) }, { rolbypassrls: false, rolsuper: false, memberships: 0 });
+    const r = (await su("select rolbypassrls, rolsuper, rolcanlogin, rolconnlimit, (select count(*) from pg_auth_members m where m.member = r.oid) as memberships from pg_roles r where rolname = 'lead_intake'")).rows[0];
+    assert.deepEqual({ ...r, memberships: Number(r.memberships) }, { rolbypassrls: false, rolsuper: false, rolcanlogin: false, rolconnlimit: 5, memberships: 0 });
   });
 });
 

@@ -3,42 +3,106 @@
     "title": "New apartments in Łódź",
     "description": "Residential development website in Łódź – in preparation."
   },
+  "A11y": {
+    "skipToContent": "Skip to content",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
   "Nav": {
     "label": "Main menu",
-    "brandPlaceholder": "[Company name – to be added]",
+    "home": "Home",
+    "brandPlaceholder": "[Developer name]",
     "projects": "Projects",
     "contact": "Contact"
   },
   "Footer": {
+    "companyTitle": "Developer",
     "companyPlaceholder": "[Company details and contact – to be added]",
-    "legalPlaceholder": "[Privacy policy and legal information – awaiting approval]"
+    "pagesTitle": "Site",
+    "legalTitle": "Legal",
+    "privacy": "Privacy policy",
+    "legalPlaceholder": "[Other legal information – awaiting approval]",
+    "draftNote": "This site is being prepared. The content is a draft."
+  },
+  "Placeholder": {
+    "badge": "Content to be added"
   },
   "Home": {
+    "eyebrow": "Łódź",
     "heading": "New apartments in Łódź",
-    "status": "This site is being prepared. The content on it is a draft.",
-    "cta": "View projects"
+    "lead": "The Rodomska development. This site is being prepared, and more information will appear once it has been approved.",
+    "ctaProject": "Explore the development",
+    "ctaContact": "Leave your details",
+    "visualLabel": "Abstract illustration of an architectural composition",
+    "visualCaption": "Abstract illustration. It does not depict the project.",
+    "identityEyebrow": "Developer",
+    "identityTitle": "[Developer identity and mission]",
+    "identityBody": "[A description of the developer and their approach to the development will appear here. The text will be added once approved information has been provided.]",
+    "overviewEyebrow": "Development",
+    "overviewBody": "[A short description of the development – to be added once approved data has been provided.]",
+    "factsTitle": "Key information",
+    "factsNote": "The data is being verified. Until it is confirmed, we do not publish figures, prices or dates.",
+    "overviewLink": "View the development page",
+    "contactTitle": "Leave your details",
+    "contactBody": "Fill in the form and we will answer your questions about the development.",
+    "contactLink": "Go to the form"
   },
   "Projects": {
     "title": "Projects",
-    "intro": "The content below is a sample and does not describe a real development.",
-    "placeholderBadge": "Sample – draft data",
+    "intro": "Information about the developments will appear here once it has been approved.",
     "details": "Details",
-    "enquiryTitle": "Ask about this project",
+    "enquiryTitle": "Ask about this development",
+    "provisional": "Preliminary data, being verified",
     "status": {
       "planning": "In preparation",
       "selling": "On sale",
       "completed": "Completed"
     },
     "items": {
-      "example-project": {
-        "name": "[Sample project]",
-        "summary": "[Project description – to be added once the details are provided.]"
+      "rodomska": {
+        "name": "Rodomska",
+        "summary": "[Description of the development – to be added once approved data has been provided.]"
       }
+    },
+    "facts": {
+      "location": "Location",
+      "units": "Number of apartments",
+      "floors": "Storeys",
+      "completion": "Completion date",
+      "pricing": "Prices"
+    },
+    "factPending": "To be confirmed",
+    "unitsTitle": "Apartments",
+    "unitsEmpty": "The list of apartments (areas, floors, availability and prices) will be published once the data has been approved.",
+    "mediaTitle": "Visualisations and plans",
+    "mediaIntro": "Visual materials will be added once they have been approved. Each one will be labelled as a visualisation, sketch, plan or photograph.",
+    "mediaPending": "Material in preparation",
+    "media": {
+      "visualization": "Visualisation",
+      "sketch": "Architectural sketch",
+      "floorplan": "Floor plan",
+      "photo": "Photograph"
     }
   },
   "Contact": {
     "title": "Contact",
-    "intro": "Leave your details and we will get back to you."
+    "intro": "Leave your details and we will get back to you.",
+    "detailsTitle": "Contact details",
+    "address": "Address",
+    "phone": "Phone",
+    "email": "Email",
+    "hours": "Contact hours",
+    "pending": "[To be added]",
+    "formTitle": "Contact form"
+  },
+  "Privacy": {
+    "title": "Privacy policy",
+    "body": "The text of the privacy policy has not been approved yet. This page is temporary and is not legal information."
+  },
+  "NotFound": {
+    "title": "Page not found",
+    "body": "The page you are looking for does not exist or has been moved.",
+    "back": "Back to the home page"
   },
   "LeadForm": {
     "firstName": "First name",
@@ -51,9 +115,10 @@
     "success": "Thank you. We will be in touch.",
     "privacyPlaceholder": "[Personal data processing notice – text awaiting legal approval.]",
     "notConfigured": "Anti-spam verification is not configured. The form is disabled.",
+    "fieldError": "Please check this field.",
     "errors": {
       "invalid": "Please check the highlighted fields and try again.",
-      "invalid_project": "This project is not accepting enquiries right now.",
+      "invalid_project": "This development is not accepting enquiries right now.",
       "verification": "We could not verify the form. Please try again.",
       "busy": "Too many attempts. Please try again in a few minutes.",
       "unavailable": "Your enquiry could not be sent. Please try again later."
