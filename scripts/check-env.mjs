@@ -53,5 +53,13 @@ for (const [name, value] of Object.entries(env)) {
 // Server-only secrets are optional now; just note whether they exist and that they are not public.
 console.log(env.SUPABASE_SECRET_KEY ? "• SUPABASE_SECRET_KEY is set (server-only; not needed until lead intake)" : "• SUPABASE_SECRET_KEY not set (fine until lead intake)");
 
+// Lead intake: exactly one server credential, never both (docs/lead-intake-credential.md).
+if (env.SUPABASE_SECRET_KEY && env.LEAD_INTAKE_DATABASE_URL) bad("Both SUPABASE_SECRET_KEY and LEAD_INTAKE_DATABASE_URL are set. Configure exactly one; there is no fallback");
+else console.log(env.LEAD_INTAKE_DATABASE_URL ? "• LEAD_INTAKE_DATABASE_URL is set (Option B, server-only)" : "• LEAD_INTAKE_DATABASE_URL not set (Option B not configured)");
+
+// Turnstile: the site key is public, the secret must not be.
+console.log(env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? "• NEXT_PUBLIC_TURNSTILE_SITE_KEY is set" : "• NEXT_PUBLIC_TURNSTILE_SITE_KEY not set (the enquiry form stays disabled)");
+console.log(env.TURNSTILE_SECRET_KEY ? "• TURNSTILE_SECRET_KEY is set (server-only)" : "• TURNSTILE_SECRET_KEY not set (enquiries are refused with 503)");
+
 console.log("Region cannot be read from these values. Check it in the Supabase dashboard (see docs/supabase-setup.md).");
 process.exit(failed ? 1 : 0);

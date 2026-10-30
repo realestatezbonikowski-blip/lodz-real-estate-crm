@@ -57,6 +57,16 @@ TLS: use at least `sslmode=require`; prefer `verify-full` with Supabase's root c
 8. Confirm one deliberate wrong-password attempt does not lock out the machine (do **not** repeat failed attempts).
 9. In Phase 3, repeat 2–3 from the real hosting environment.
 
+### Verification plan and current blocker (2026-10-30)
+
+Known without any remote change: the linked project's shared pooler host is `aws-0-eu-west-1.pooler.supabase.com` (recorded by the CLI in `supabase/.temp/pooler-url`, no password in it); the Postgres server is 17.11; the role's privileges are already proven locally (`hardening.test.mjs`).
+
+What remains needs remote changes, so it has not been started:
+1. A new migration creating `lead_intake` `NOLOGIN` (a copy of the planned file; the planned file would then be removed and the local tests adjusted, because the tests currently apply the planned file on top of the migrations). Nothing is created until you approve the exact file.
+2. You set the password and enable login yourself with psql `\password lead_intake`, then `alter role lead_intake with login`. I cannot do this safely: it needs a password only you may know, and running it through the Management API would put the plaintext into a statement.
+3. You add `LEAD_INTAKE_DATABASE_URL` to `.env.local`.
+4. A verification script (needs a Postgres driver such as `postgres`, not installed yet) then runs pass criteria 2, 4, 5 and 6 without printing the URL. Criterion 3 creates a fake lead, which is a remote write and needs a separate go-ahead; you remove it as owner.
+
 ## 3. If Option B cannot be used safely
 
 **Do not silently fall back to the secret key.** The Phase 3 code will read exactly one credential variable:

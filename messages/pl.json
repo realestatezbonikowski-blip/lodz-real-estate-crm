@@ -3,9 +3,61 @@
     "title": "Nowe mieszkania w Łodzi",
     "description": "Strona inwestycji mieszkaniowej w Łodzi – w przygotowaniu."
   },
+  "Nav": {
+    "label": "Menu główne",
+    "brandPlaceholder": "[Nazwa firmy – do uzupełnienia]",
+    "projects": "Inwestycje",
+    "contact": "Kontakt"
+  },
+  "Footer": {
+    "companyPlaceholder": "[Dane firmy i kontakt – do uzupełnienia]",
+    "legalPlaceholder": "[Polityka prywatności i informacje prawne – oczekują na zatwierdzenie]"
+  },
   "Home": {
     "heading": "Nowe mieszkania w Łodzi",
-    "status": "Strona jest w trakcie przygotowania."
+    "status": "Strona jest w trakcie przygotowania. Treści na niej to wersje robocze.",
+    "cta": "Zobacz inwestycje"
+  },
+  "Projects": {
+    "title": "Inwestycje",
+    "intro": "Treści poniżej są przykładowe i nie opisują prawdziwej inwestycji.",
+    "placeholderBadge": "Przykład – dane robocze",
+    "details": "Szczegóły",
+    "enquiryTitle": "Zapytaj o inwestycję",
+    "status": {
+      "planning": "W przygotowaniu",
+      "selling": "W sprzedaży",
+      "completed": "Zakończona"
+    },
+    "items": {
+      "example-project": {
+        "name": "[Przykładowa inwestycja]",
+        "summary": "[Opis inwestycji – do uzupełnienia po dostarczeniu danych.]"
+      }
+    }
+  },
+  "Contact": {
+    "title": "Kontakt",
+    "intro": "Zostaw dane, a skontaktujemy się z Tobą."
+  },
+  "LeadForm": {
+    "firstName": "Imię",
+    "lastName": "Nazwisko",
+    "phone": "Telefon",
+    "email": "E-mail",
+    "message": "Wiadomość (opcjonalnie)",
+    "submit": "Wyślij zapytanie",
+    "sending": "Wysyłanie…",
+    "success": "Dziękujemy. Skontaktujemy się z Tobą.",
+    "privacyPlaceholder": "[Informacja o przetwarzaniu danych osobowych – tekst oczekuje na zatwierdzenie prawne.]",
+    "notConfigured": "Weryfikacja antyspamowa nie jest skonfigurowana. Formularz jest nieaktywny.",
+    "errors": {
+      "invalid": "Sprawdź zaznaczone pola i spróbuj ponownie.",
+      "invalid_project": "Ta inwestycja nie przyjmuje obecnie zapytań.",
+      "verification": "Nie udało się zweryfikować formularza. Spróbuj ponownie.",
+      "busy": "Zbyt wiele prób. Spróbuj ponownie za kilka minut.",
+      "unavailable": "Nie udało się wysłać zapytania. Spróbuj ponownie później."
+    }
   },
   "LocaleSwitcher": {
     "label": "Język"

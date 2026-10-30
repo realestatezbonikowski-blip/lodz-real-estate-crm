@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:db": "node --test supabase/tests/rls.test.mjs supabase/tests/hardening.test.mjs",
+    "test:unit": "node --test \"src/**/*.test.ts\"",
+    "test:db":"node --test supabase/tests/rls.test.mjs supabase/tests/hardening.test.mjs",
     "check:env": "node scripts/check-env.mjs",
     "live:anon": "node scripts/live-check-anon.mjs"
   },

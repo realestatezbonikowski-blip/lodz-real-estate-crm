@@ -31,6 +31,10 @@
 | 26 | No future-dated activities for now | Owner decision |
 | 27 | MFA will be enforced before production launch | Owner decision; `supabase/planned/mfa_enforcement.sql` |
 | 28 | Intake credential: prefer Option B (`lead_intake` role), unverified; no silent fallback to the secret key | Owner decision; see `docs/lead-intake-credential.md` |
+| 29 | Supabase dashboard: Data API exposes `public` only; "automatically expose new tables" is off; email signups and anonymous sign-ins are off | Owner change, verified from outside on 2026-10-30 (`security-review-phase-1b.md` 5a). Consequence: new tables and functions get no default grant for `service_role` either, so every future migration must grant explicitly what it needs |
+| 30 | Public enquiry endpoint is `POST /api/leads` (route handler): origin check, per-client rate limit, size limit, honeypot, strict Zod, Turnstile, then `submit_lead` through an injected submitter. With no submitter it answers 503 and stores nothing | Phase 2. The pipeline is a pure function covered by `npm run test:unit` |
+| 31 | The endpoint also rate-limits per client address, in process memory only (never stored, logged or sent to Turnstile) | Phase 2, at the owner's request; revises row 8 ("no IP limiter initially"). Best effort on serverless; the database limits stay authoritative. Added as GDPR question 21 for the adviser |
+| 32 | Placeholder content only: project, company, legal and contact text are marked placeholders; `PRIVACY_NOTICE_VERSION = "placeholder-0"` | No real data or legal text has been supplied. The site must not launch with them (launch gate in `docs/gdpr-open-questions.md`) |
 
 See `docs/database.md` for the schema, authorization matrix and open database decisions, and `docs/security-review-phase-1b.md` for the review.
 

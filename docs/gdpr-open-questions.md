@@ -37,5 +37,12 @@ Still undecided. The schema currently stores the data listed, and nothing more.
 | 19 | Which of the Supabase secret key (Option A) or a dedicated database role (Option B) is acceptable as the server credential for personal data? | Controller (technical measures) | See `docs/security-review-phase-1b.md` |
 | 20 | Contact-detail and assignment changes are now audited (field names and staff ids only). Is that sufficient as a rectification trail, and how long is the audit log kept? | Controller / adviser | Audit retention; wider coverage if required |
 
+## Questions raised by Phase 2 (public form)
+
+| # | Question | Who confirms | Code that depends on it |
+|---|---|---|---|
+| 21 | The enquiry endpoint uses the client's network address transiently in server memory for rate limiting (not stored, not logged, not sent to Turnstile). Is that acceptable, and must the notice mention it? Turnstile itself also processes visitor data in the browser (provider assessment is item 6) | Legal adviser | `src/app/api/leads/route.ts`, `src/lib/security/rate-limit.ts` |
+| 22 | What value should `leads.privacy_notice_version` hold, and where is the notice shown on the form? Today: placeholder `placeholder-0` and a marked placeholder paragraph | Legal adviser | `src/features/leads/config.ts`, `LeadForm` |
+
 ## Launch gate
 The public site must not go live with placeholder legal text. Items 1, 2, 4 and 6 are required before launch.

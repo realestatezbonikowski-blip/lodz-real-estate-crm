@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHeader } from "@/components/SiteHeader";
 import { routing } from "@/i18n/routing";
 import { inter } from "@/lib/fonts";
 import "../globals.css";
@@ -32,7 +34,11 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <html lang={locale} className={inter.variable}>
       <body className="min-h-screen antialiased">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <SiteHeader />
+          {children}
+          <SiteFooter />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

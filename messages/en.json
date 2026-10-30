@@ -1,11 +1,63 @@
 {
   "Metadata": {
     "title": "New apartments in Łódź",
-    "description": "Residential development website in Łódź – coming soon."
+    "description": "Residential development website in Łódź – in preparation."
+  },
+  "Nav": {
+    "label": "Main menu",
+    "brandPlaceholder": "[Company name – to be added]",
+    "projects": "Projects",
+    "contact": "Contact"
+  },
+  "Footer": {
+    "companyPlaceholder": "[Company details and contact – to be added]",
+    "legalPlaceholder": "[Privacy policy and legal information – awaiting approval]"
   },
   "Home": {
     "heading": "New apartments in Łódź",
-    "status": "This website is under construction."
+    "status": "This site is being prepared. The content on it is a draft.",
+    "cta": "View projects"
+  },
+  "Projects": {
+    "title": "Projects",
+    "intro": "The content below is a sample and does not describe a real development.",
+    "placeholderBadge": "Sample – draft data",
+    "details": "Details",
+    "enquiryTitle": "Ask about this project",
+    "status": {
+      "planning": "In preparation",
+      "selling": "On sale",
+      "completed": "Completed"
+    },
+    "items": {
+      "example-project": {
+        "name": "[Sample project]",
+        "summary": "[Project description – to be added once the details are provided.]"
+      }
+    }
+  },
+  "Contact": {
+    "title": "Contact",
+    "intro": "Leave your details and we will get back to you."
+  },
+  "LeadForm": {
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone",
+    "email": "Email",
+    "message": "Message (optional)",
+    "submit": "Send enquiry",
+    "sending": "Sending…",
+    "success": "Thank you. We will be in touch.",
+    "privacyPlaceholder": "[Personal data processing notice – text awaiting legal approval.]",
+    "notConfigured": "Anti-spam verification is not configured. The form is disabled.",
+    "errors": {
+      "invalid": "Please check the highlighted fields and try again.",
+      "invalid_project": "This project is not accepting enquiries right now.",
+      "verification": "We could not verify the form. Please try again.",
+      "busy": "Too many attempts. Please try again in a few minutes.",
+      "unavailable": "Your enquiry could not be sent. Please try again later."
+    }
   },
   "LocaleSwitcher": {
     "label": "Language"
