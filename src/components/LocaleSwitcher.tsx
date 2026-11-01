@@ -25,7 +25,7 @@ export function LocaleSwitcher() {
               title={NAMES[locale]}
               aria-label={NAMES[locale]}
               aria-current={locale === current ? "true" : undefined}
-              className="inline-flex min-h-11 min-w-11 items-center justify-center tracking-wider text-muted aria-[current=true]:font-semibold aria-[current=true]:text-ink aria-[current=true]:underline aria-[current=true]:underline-offset-8 hover:text-ink"
+              className="inline-flex min-h-11 min-w-10 items-center md:min-w-11 justify-center tracking-wider text-muted aria-[current=true]:font-semibold aria-[current=true]:text-ink aria-[current=true]:underline aria-[current=true]:underline-offset-8 hover:text-ink"
             >
               {LABELS[locale]}
             </Link>

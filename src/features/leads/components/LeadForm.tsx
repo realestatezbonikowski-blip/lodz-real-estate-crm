@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { Message } from "@/components/Message";
 import { useLocale, useTranslations } from "next-intl";
 import { TurnstileWidget } from "./TurnstileWidget";
 
@@ -52,9 +53,9 @@ function Field(props: FieldProps) {
         <input {...shared} type={props.type ?? "text"} inputMode={props.inputMode} />
       )}
       {props.invalid && (
-        <p id={errId} className="mt-1 text-sm text-accent">
+        <Message tone="error" id={errId} className="mt-1">
           {props.errorText}
-        </p>
+        </Message>
       )}
     </div>
   );
@@ -156,9 +157,9 @@ export function LeadForm({ projectSlug }: { projectSlug?: string }) {
       )}
 
       {state.kind === "error" && (
-        <p role="alert" className="text-sm text-accent">
+        <Message tone="error">
           {t(`errors.${state.code}`)}
-        </p>
+        </Message>
       )}
 
       <div>

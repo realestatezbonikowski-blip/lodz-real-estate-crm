@@ -11,7 +11,7 @@
   "Nav": {
     "label": "Main menu",
     "home": "Home",
-    "brandPlaceholder": "[Developer name]",
+    "brandPlaceholder": "Radomska 5",
     "projects": "Projects",
     "contact": "Contact"
   },
@@ -60,7 +60,7 @@
     },
     "items": {
       "rodomska": {
-        "name": "Rodomska",
+        "name": "Radomska 5",
         "summary": "[Description of the development – to be added once approved data has been provided.]"
       }
     },
@@ -126,5 +126,118 @@
   },
   "LocaleSwitcher": {
     "label": "Language"
+  },
+  "Concept": {
+    "hero": {
+      "region": "Visualisation: the entrance to Radomska 5",
+      "eyebrow": "Łódź · ul. Radomska 5",
+      "title": "Radomska 5",
+      "subtitle": "Residential architecture in Łódź",
+      "lead": "A small residential building shown in concept visualisations. Offer details will follow once they are approved.",
+      "ctaApartments": "View apartments",
+      "ctaFinancing": "Financing model",
+      "scroll": "Scroll to step inside",
+      "poster": "Concept visualisation: the Radomska 5 building at sunset, seen from the street.",
+      "disclaimer": "Concept visualisation. It does not show a completed building.",
+      "beat": "From the street to the lobby, in one continuous shot.",
+      "end": "Continue",
+      "stages": {
+        "facade": "Facade",
+        "entrance": "Entrance",
+        "lobby": "Lobby"
+      }
+    },
+    "concept": {
+      "eyebrow": "Architecture",
+      "title": "A compact volume, a calm rhythm of windows.",
+      "body": "In the visualisations the building is a white, geometric volume on a dark base, with glazed balconies and a regular pattern of windows. The project is at concept stage.",
+      "drawing": "Schematic drawing of the facade: three storeys of three windows above a dark base.",
+      "address": "Address",
+      "addressValue": "ul. Radomska 5, Łódź",
+      "scale": "Scale",
+      "scaleValue": "15–20",
+      "scaleUnit": "apartments, preliminary",
+      "stage": "Stage",
+      "stageValue": "Concept",
+      "stageUnit": "data under verification",
+      "note": "Preliminary data. Until it is confirmed we do not publish the finishing standard, dates or floor areas."
+    },
+    "gallery": {
+      "eyebrow": "See the building",
+      "title": "The volume from three sides",
+      "front": "Front elevation",
+      "frontAlt": "Visualisation: the front elevation, three storeys of windows with textured cladding, a dark ground floor and the entrance.",
+      "angle1": "View from the street",
+      "angle1Alt": "Visualisation: the building seen from a street corner, with balconies on the left side of the volume.",
+      "angle2": "The corner by the driveway",
+      "angle2Alt": "Visualisation: a corner of the building with balconies, a dark courtyard facade and the Radomska sign.",
+      "kind": "Concept visualisation",
+      "note": "All views show the architectural concept and may differ from the final design."
+    },
+    "finance": {
+      "eyebrow": "Financing model",
+      "title": "Buy at your own pace.",
+      "lead": "The proposed concept: an initial payment, then the rest in instalments spread over many years, paid directly to the company.",
+      "badge": "Concept of a financing model. Terms require confirmation by the developer.",
+      "initial": "initial payment",
+      "initialValue": "30%",
+      "termPrefix": "up to",
+      "termValue": "25",
+      "termUnit": "years",
+      "term": "to spread the remaining amount into instalments",
+      "barInitial": "Initial payment 30%",
+      "barRest": "Instalments: the remaining 70%, up to 25 years",
+      "barLabel": "Diagram: a 30% initial payment, then the remaining amount in instalments of up to 25 years.",
+      "axisYears": "yrs",
+      "p1": "30% of the apartment price as the initial payment",
+      "p2": "The remaining amount in instalments, up to 25 years",
+      "p3": "Payments made directly to the company, without a conventional mortgage",
+      "p4": "Schedule, instalment amounts and other terms: to be confirmed",
+      "cta": "Ask about the terms",
+      "fine": "This presentation is conceptual. It is not an offer in the legal sense and not a guarantee. Instalment amounts, any costs and eligibility terms will be set by the developer."
+    },
+    "apartments": {
+      "eyebrow": "Apartments",
+      "title": "Pick a level, see the layout.",
+      "lead": "This is how apartment search could look once approved plans and data are available.",
+      "sample": "Sample data — for concept presentation only. Not a real offer.",
+      "levels": "Building level",
+      "all": "All",
+      "level": "Level",
+      "roomsFilter": "Number of rooms",
+      "roomsAny": "Any",
+      "rooms": "Rooms",
+      "area": "Area",
+      "floor": "Floor",
+      "unit": "Unit",
+      "priceLabel": "Price and status",
+      "pending": "To be confirmed",
+      "example": "Sample",
+      "showing": "Showing {shown} of {total} sample apartments",
+      "none": "No samples match these filters.",
+      "sqm": "m²"
+    },
+    "interior": {
+      "eyebrow": "Interiors",
+      "title": "An entrance that invites you in.",
+      "body": "A visualisation of the lobby: dark cladding, timber slats and a concrete bench under linear light. It is a vision of the interior, not documentation of a completed space.",
+      "alt": "Visualisation: the entrance lobby with timber slats, a dark wall, a concrete bench and a line of light on the wall.",
+      "badge": "Concept visualisation"
+    },
+    "location": {
+      "eyebrow": "Location",
+      "title": "ul. Radomska 5, Łódź",
+      "body": "The project address. The volume below is a conceptual illustration: it does not reproduce streets, neighbouring buildings or distances. A map and directions will be added once the information is verified.",
+      "illustration": "Conceptual isometric illustration: the highlighted volume of Radomska 5 on a neutral ground plane. This is not a map.",
+      "legendBuilding": "Radomska 5",
+      "legendContext": "Surroundings: indicative diagram",
+      "badge": "Conceptual illustration, not a map"
+    },
+    "cta": {
+      "eyebrow": "Contact",
+      "title": "Let’s talk about apartments.",
+      "body": "Leave your details and we will answer your questions about the project and the proposed financing model.",
+      "link": "Go to the form"
+    }
   }
 }

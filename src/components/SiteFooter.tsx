@@ -5,7 +5,7 @@ export async function SiteFooter() {
   const t = await getTranslations("Footer");
   const nav = await getTranslations("Nav");
   return (
-    <footer className="border-t border-border bg-paper-deep">
+    <footer className="surface-night border-t border-border bg-paper">
       <div className="wrap grid gap-10 py-12 text-sm md:grid-cols-3">
         <div>
           <p className="display text-2xl">{nav("brandPlaceholder")}</p>
@@ -29,7 +29,7 @@ export async function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-border">
-        <p className="wrap py-4 text-xs text-muted">{t("draftNote")}</p>
+        <p className="wrap py-4 text-[0.8125rem] text-muted">{t("draftNote")}</p>
       </div>
     </footer>
   );

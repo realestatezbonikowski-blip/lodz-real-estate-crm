@@ -43,7 +43,7 @@ export default async function ProjectsPage({ params }: Props) {
           </li>
         ))}
       </ul>
-      <p className="mt-6 text-xs text-muted">{home("visualCaption")}</p>
+      <p className="mt-6 text-[0.8125rem] text-muted">{home("visualCaption")}</p>
     </main>
   );
 }

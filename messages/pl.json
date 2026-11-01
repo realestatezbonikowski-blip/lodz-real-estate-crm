@@ -11,7 +11,7 @@
   "Nav": {
     "label": "Menu główne",
     "home": "Strona główna",
-    "brandPlaceholder": "[Nazwa dewelopera]",
+    "brandPlaceholder": "Radomska 5",
     "projects": "Inwestycje",
     "contact": "Kontakt"
   },
@@ -60,7 +60,7 @@
     },
     "items": {
       "rodomska": {
-        "name": "Rodomska",
+        "name": "Radomska 5",
         "summary": "[Opis inwestycji – do uzupełnienia po dostarczeniu zatwierdzonych danych.]"
       }
     },
@@ -126,5 +126,118 @@
   },
   "LocaleSwitcher": {
     "label": "Język"
+  },
+  "Concept": {
+    "hero": {
+      "region": "Wizualizacja: wejście do budynku Radomska 5",
+      "eyebrow": "Łódź · ul. Radomska 5",
+      "title": "Radomska 5",
+      "subtitle": "Architektura mieszkaniowa w Łodzi",
+      "lead": "Kameralny budynek pokazany na wizualizacjach koncepcyjnych. Szczegóły oferty pojawią się po ich zatwierdzeniu.",
+      "ctaApartments": "Zobacz mieszkania",
+      "ctaFinancing": "Model finansowania",
+      "scroll": "Przewiń, aby wejść do środka",
+      "poster": "Wizualizacja koncepcyjna: budynek Radomska 5 o zachodzie słońca, widok od strony ulicy.",
+      "disclaimer": "Wizualizacja koncepcyjna. Nie przedstawia zrealizowanego budynku.",
+      "beat": "Od ulicy do holu, w jednym ujęciu.",
+      "end": "Dalej",
+      "stages": {
+        "facade": "Elewacja",
+        "entrance": "Wejście",
+        "lobby": "Hol wejściowy"
+      }
+    },
+    "concept": {
+      "eyebrow": "Architektura",
+      "title": "Zwarta bryła, spokojny rytm okien.",
+      "body": "Na wizualizacjach budynek to biała, geometryczna kubatura na ciemnym cokole, z przeszklonymi balkonami i regularnym układem okien. Projekt jest na etapie koncepcji.",
+      "drawing": "Schematyczny rysunek elewacji: trzy kondygnacje po trzy okna nad ciemnym cokołem.",
+      "address": "Adres",
+      "addressValue": "ul. Radomska 5, Łódź",
+      "scale": "Skala",
+      "scaleValue": "15–20",
+      "scaleUnit": "mieszkań, wstępnie",
+      "stage": "Etap",
+      "stageValue": "Koncepcja",
+      "stageUnit": "dane w weryfikacji",
+      "note": "Dane wstępne. Do czasu ich potwierdzenia nie publikujemy standardu wykończenia, terminów ani metraży."
+    },
+    "gallery": {
+      "eyebrow": "Zobacz budynek",
+      "title": "Bryła z trzech stron",
+      "front": "Elewacja frontowa",
+      "frontAlt": "Wizualizacja: elewacja frontowa, trzy kondygnacje okien z fakturową okładziną, ciemny parter i wejście.",
+      "angle1": "Widok od strony ulicy",
+      "angle1Alt": "Wizualizacja: budynek widziany z narożnika ulicy, z balkonami po lewej stronie bryły.",
+      "angle2": "Narożnik od strony wjazdu",
+      "angle2Alt": "Wizualizacja: narożnik budynku z balkonami, ciemną elewacją od strony podwórza i szyldem Radomska.",
+      "kind": "Wizualizacja koncepcyjna",
+      "note": "Wszystkie widoki przedstawiają koncepcję architektoniczną i mogą różnić się od ostatecznego projektu."
+    },
+    "finance": {
+      "eyebrow": "Model finansowania",
+      "title": "Zakup we własnym rytmie.",
+      "lead": "Proponowana koncepcja: wpłata początkowa, a reszta w ratach rozłożonych na wiele lat, płaconych bezpośrednio firmie.",
+      "badge": "Koncepcja modelu finansowania. Warunki wymagają potwierdzenia przez dewelopera.",
+      "initial": "wpłata początkowa",
+      "initialValue": "30%",
+      "termPrefix": "do",
+      "termValue": "25",
+      "termUnit": "lat",
+      "term": "na rozłożenie pozostałej kwoty na raty",
+      "barInitial": "Wpłata początkowa 30%",
+      "barRest": "Raty: pozostałe 70%, do 25 lat",
+      "barLabel": "Schemat: 30% wpłaty początkowej, a następnie pozostała kwota w ratach do 25 lat.",
+      "axisYears": "lat",
+      "p1": "30% ceny mieszkania jako wpłata początkowa",
+      "p2": "Pozostała kwota w ratach, do 25 lat",
+      "p3": "Płatności bezpośrednio na rzecz firmy, bez konwencjonalnego kredytu hipotecznego",
+      "p4": "Harmonogram, wysokość rat i pozostałe warunki: do potwierdzenia",
+      "cta": "Zapytaj o warunki",
+      "fine": "Prezentacja ma charakter koncepcyjny. Nie jest ofertą w rozumieniu prawa ani gwarancją. Wysokość rat, ewentualne koszty i warunki uczestnictwa zostaną określone przez dewelopera."
+    },
+    "apartments": {
+      "eyebrow": "Mieszkania",
+      "title": "Wybierz poziom, zobacz układ.",
+      "lead": "Tak może wyglądać wyszukiwanie mieszkań, gdy dostępne będą zatwierdzone rzuty i dane.",
+      "sample": "Dane przykładowe — wyłącznie do prezentacji koncepcji. Nie stanowią rzeczywistej oferty.",
+      "levels": "Poziom budynku",
+      "all": "Wszystkie",
+      "level": "Poziom",
+      "roomsFilter": "Liczba pokoi",
+      "roomsAny": "Dowolna",
+      "rooms": "Pokoje",
+      "area": "Powierzchnia",
+      "floor": "Piętro",
+      "unit": "Symbol",
+      "priceLabel": "Cena i status",
+      "pending": "Do potwierdzenia",
+      "example": "Przykład",
+      "showing": "Wyświetlono {shown} z {total} przykładowych mieszkań",
+      "none": "Brak przykładów dla tych filtrów.",
+      "sqm": "m²"
+    },
+    "interior": {
+      "eyebrow": "Wnętrza",
+      "title": "Wejście, które zaprasza do środka.",
+      "body": "Wizualizacja holu: ciemna okładzina, drewniane lamele i betonowa ławka pod liniowym światłem. To wizja wnętrza, a nie dokumentacja zrealizowanego obiektu.",
+      "alt": "Wizualizacja: hol wejściowy z drewnianymi lamelami, ciemną ścianą, betonową ławką i świetlną linią na ścianie.",
+      "badge": "Wizualizacja koncepcyjna"
+    },
+    "location": {
+      "eyebrow": "Lokalizacja",
+      "title": "ul. Radomska 5, Łódź",
+      "body": "Adres inwestycji. Poniższa bryła to ilustracja koncepcyjna: nie odwzorowuje ulic, sąsiednich budynków ani odległości. Mapa i dojazd zostaną dodane po weryfikacji informacji.",
+      "illustration": "Ilustracja koncepcyjna w rzucie izometrycznym: wyróżniona bryła budynku Radomska 5 na neutralnym podłożu. To nie jest mapa.",
+      "legendBuilding": "Radomska 5",
+      "legendContext": "Otoczenie: schemat poglądowy",
+      "badge": "Ilustracja koncepcyjna, nie mapa"
+    },
+    "cta": {
+      "eyebrow": "Kontakt",
+      "title": "Porozmawiajmy o mieszkaniach.",
+      "body": "Zostaw dane, a odpowiemy na pytania o inwestycję i proponowany model finansowania.",
+      "link": "Przejdź do formularza"
+    }
   }
 }

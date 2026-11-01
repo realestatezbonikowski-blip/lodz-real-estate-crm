@@ -5,7 +5,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { routing } from "@/i18n/routing";
-import { display, inter } from "@/lib/fonts";
+import { inter } from "@/lib/fonts";
+import { display } from "@/lib/fonts-display";
 import "../globals.css";
 
 type Props = {
@@ -40,7 +41,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <html lang={locale} className={`${inter.variable} ${display.variable}`}>
-      <body className="min-h-screen antialiased">
+      <body className="theme-radomska min-h-screen antialiased">
         <NextIntlClientProvider>
           <a
             href="#content"

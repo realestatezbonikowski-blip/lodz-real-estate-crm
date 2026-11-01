@@ -18,6 +18,26 @@
   --accent: #9c4426;
   --stone: #25302b;
 
+  /*
+   * Semantic states. The terracotta --accent is the BRAND colour only (links on hover, primary hover,
+   * selection, focus). Errors, destructive actions and new leads each have their own meaning below,
+   * and every state is always paired with an icon or a text label, never colour alone.
+   * Text/tint pairs, WCAG AA (computed): success 5.7:1, warning 5.2:1, danger 5.9:1, info 7.0:1.
+   */
+  --success: #2f6b4f;
+  --success-tint: #e3ece5;
+  --warning: #7a4f00;
+  --warning-tint: #f3e8d0;
+  --danger: #a3262a;
+  --danger-tint: #f3dcdb;
+  --info: #2d4a6b;
+  --info-tint: #dde6ef;
+
+  /* Surfaces and interaction. */
+  --surface: color-mix(in srgb, var(--paper) 60%, white); /* cards, panels */
+  --field-bg: #fff;
+  --focus: var(--accent); /* inside .on-dark the focus ring flips to paper */
+
   /* Motion (curves from the design-engineering guidance: built-in CSS easings are too weak). */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
@@ -33,6 +53,14 @@
   --color-ink: var(--ink);
   --color-accent: var(--accent);
   --color-stone: var(--stone);
+  --color-success: var(--success);
+  --color-success-tint: var(--success-tint);
+  --color-warning: var(--warning);
+  --color-warning-tint: var(--warning-tint);
+  --color-danger: var(--danger);
+  --color-danger-tint: var(--danger-tint);
+  --color-info: var(--info);
+  --color-info-tint: var(--info-tint);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-display-face), "Cormorant Garamond", Georgia, serif;
 }
@@ -56,9 +84,25 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--focus);
   outline-offset: 3px;
   border-radius: 2px;
+}
+
+/* Deep-stone / ink panels: terracotta would be ~2.4:1 there, so the ring becomes paper. */
+.on-dark {
+  --focus: var(--paper);
+}
+
+/* CRM is Inter-only: the serif display face is not loaded there, so headings use the sans. */
+.crm .display {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+.crm {
+  font-variant-numeric: tabular-nums;
 }
 
 @layer components {
@@ -75,7 +119,7 @@ body {
   }
 
   .eyebrow {
-    font-size: 0.75rem;
+    font-size: 0.8125rem; /* 13px: 12px uppercase was too small to read comfortably */
     font-weight: 500;
     letter-spacing: 0.16em;
     text-transform: uppercase;
@@ -93,8 +137,8 @@ body {
     display: inline-block;
     border: 1px solid var(--line);
     padding: 0.2rem 0.6rem;
-    font-size: 0.7rem;
-    letter-spacing: 0.08em;
+    font-size: 0.8125rem; /* 13px (was 11.2px) */
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--muted);
   }
@@ -127,11 +171,27 @@ body {
     background: transparent;
     color: var(--ink);
   }
-  .btn:disabled {
+  /* Destructive: its own colour, never the brand terracotta. */
+  .btn-danger {
+    background: transparent;
+    color: var(--danger);
+    border-color: var(--danger);
+  }
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
     opacity: 0.5;
     cursor: not-allowed;
   }
+  /* Pending form submission (set via data-pending): same dimensions, no layout shift. */
+  .btn[data-pending="true"] {
+    cursor: progress;
+    opacity: 0.7;
+  }
   @media (hover: hover) and (pointer: fine) {
+    .btn-danger:hover:not(:disabled) {
+      background: var(--danger);
+      color: #fff;
+    }
     .btn-primary:hover:not(:disabled) {
       background: var(--accent);
       border-color: var(--accent);
@@ -156,7 +216,7 @@ body {
 
   .card {
     border: 1px solid var(--line);
-    background: color-mix(in srgb, var(--paper) 60%, white);
+    background: var(--surface);
     transition:
       transform 220ms var(--ease-out),
       border-color 220ms ease;
@@ -172,14 +232,82 @@ body {
     width: 100%;
     min-height: 2.75rem;
     border: 1px solid var(--ink);
-    background: #fff;
+    background: var(--field-bg);
     padding: 0.6rem 0.8rem;
     font-size: 1rem;
     transition: border-color 160ms ease, box-shadow 160ms ease;
   }
+  /* Checkboxes: 24x24px minimum hit area (WCAG 2.2 AA target size); the label around them is 44px tall. */
+  .check {
+    width: 1.5rem;
+    height: 1.5rem;
+    flex-shrink: 0;
+    cursor: pointer;
+    accent-color: var(--ink);
+  }
+
+  /* Browsers' default placeholder colour measured 3.4:1 on white; --muted is 7.4:1. */
+  .field::placeholder {
+    color: var(--muted);
+    opacity: 1;
+  }
   .field[aria-invalid="true"] {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px var(--accent);
+    border-color: var(--danger);
+    box-shadow: 0 0 0 1px var(--danger);
+  }
+  .field:disabled {
+    background: var(--paper-deep);
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+
+  /*
+   * Status chips and inline messages. Tone = meaning; the icon + text label carry it too.
+   * `.badge-solid` is reserved for the single "needs attention" state (a scheduled meeting).
+   */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border: 1px solid currentColor;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+  .tone-info { color: var(--info); background: var(--info-tint); }
+  .tone-success { color: var(--success); background: var(--success-tint); }
+  .tone-warning { color: var(--warning); background: var(--warning-tint); }
+  .tone-danger { color: var(--danger); background: var(--danger-tint); }
+  .tone-neutral { color: var(--muted); background: var(--paper-deep); }
+  .badge-solid.tone-info { color: #fff; background: var(--info); border-color: var(--info); }
+
+  /* Inline feedback (errors, confirmations): tone colour + icon + text, so it never relies on colour. */
+  .message {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+  .message > svg {
+    flex-shrink: 0;
+    margin-top: 0.2rem;
+  }
+
+  .skeleton {
+    background: var(--paper-deep);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton {
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.55;
   }
 }
 
@@ -253,4 +381,542 @@ body {
   .btn:active {
     transform: none;
   }
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * Concept home: cinematic hero, editorial sections.
+ * ------------------------------------------------------------------------------------------- */
+
+/* Hero. Static by default (one screen, first frame as a still). With JS, motion allowed and a
+ * decent connection, HeroSequence sets data-scrub and the section gains scroll length; the pinned
+ * stage then follows the scroll position. The header is 4rem tall and sticky. */
+.hero {
+  height: calc(100svh - 4rem);
+}
+.hero[data-scrub="true"] {
+  height: 420svh;
+}
+.hero-pin {
+  position: sticky;
+  top: 4rem;
+  height: calc(100svh - 4rem);
+  overflow: hidden;
+}
+.hero:not([data-scrub="true"]) .hero-pin {
+  position: relative;
+  top: 0;
+  height: 100%;
+}
+.hero-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 70% 50%;
+}
+@media (min-width: 768px) {
+  .hero-media {
+    object-position: 50% 50%;
+  }
+}
+.hero-canvas {
+  opacity: 0;
+}
+.hero-canvas[data-on="true"] {
+  opacity: 1;
+}
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgb(17 22 26 / 0.9) 0%, rgb(17 22 26 / 0.68) 40%, rgb(17 22 26 / 0.2) 72%, rgb(17 22 26 / 0) 100%);
+}
+.hero-copy {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 8rem;
+  margin-inline: auto;
+  will-change: transform, opacity;
+}
+.hero-foot {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 1.1rem;
+  margin-inline: auto;
+  display: grid;
+  gap: 0.35rem;
+}
+@media (min-width: 768px) {
+  .hero-copy {
+    bottom: 5.5rem;
+  }
+  .hero-foot {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+  }
+  .hero-disclaimer {
+    grid-column: 1 / -1;
+  }
+}
+.hero-stages {
+  display: none;
+}
+.hero[data-scrub="true"] .hero-stages {
+  display: grid;
+  justify-items: end;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.hero-stages > span {
+  grid-area: 1 / 1;
+}
+.hero-railwrap {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 2px;
+  background: rgb(244 240 232 / 0.2);
+}
+.hero-rail {
+  height: 100%;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.hero:not([data-scrub="true"]) .hero-railwrap {
+  display: none;
+}
+@media (max-height: 700px) {
+  .hero-lead {
+    display: none;
+  }
+}
+@media (max-height: 700px) and (max-width: 767px) {
+  .hero-copy {
+    bottom: 7rem;
+  }
+  .hero-copy h1 {
+    font-size: clamp(3rem, 15vw, 4rem);
+  }
+}
+
+/* Buttons on dark panels. */
+.on-dark .btn-primary {
+  background: var(--paper);
+  color: var(--ink);
+  border-color: var(--paper);
+}
+.on-dark .btn-ghost {
+  color: var(--paper);
+  border-color: rgb(244 240 232 / 0.65);
+}
+@media (hover: hover) and (pointer: fine) {
+  .on-dark .btn-primary:hover:not(:disabled) {
+    background: var(--paper-deep);
+    border-color: var(--paper-deep);
+  }
+  .on-dark .btn-ghost:hover:not(:disabled) {
+    background: var(--paper);
+    color: var(--ink);
+  }
+}
+
+/* Architectural image reveal on scroll: a quiet unveiling from the bottom edge. CSS only; browsers
+ * without scroll-driven animations just show the image. */
+@keyframes img-reveal {
+  from {
+    clip-path: inset(0 0 14% 0);
+    transform: scale(1.05);
+  }
+  to {
+    clip-path: inset(0);
+    transform: none;
+  }
+}
+@supports (animation-timeline: view()) {
+  .img-reveal {
+    animation: img-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 70%;
+  }
+}
+
+/* Hairline rows (project facts, apartment mock-up). */
+.rule-list > * + * {
+  border-top: 1px solid var(--line);
+}
+.on-dark .rule-list > * + * {
+  border-top-color: rgb(244 240 232 / 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .img-reveal {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * Radomska 5: "Graphite & Light". Derived from the supplied renders: cool white facades, near-black
+ * glazing and cladding, and the warm brass of the interior lighting in the walkthrough.
+ * Scoped to the public site (body.theme-radomska) so the CRM keeps its own palette.
+ * Contrast (computed): ink/paper 16.0, muted/paper 6.5, brass-deep/paper 5.5, paper/night 15.6,
+ * muted/night 8.6, brass/night 8.0.
+ * ------------------------------------------------------------------------------------------- */
+.theme-radomska {
+  --paper: #eceeed;
+  --paper-deep: #dfe3e2;
+  --ink: #0f1316;
+  --muted: #4b565c;
+  --line: #c6cdd0;
+  --accent: #845520;
+  --stone: #11161a;
+  --surface: color-mix(in srgb, var(--paper) 55%, white);
+  --brass-lit: #d9ae74;
+  --brass-shade: #9b7240;
+}
+
+/* Dark sections re-map the same tokens, so every component (buttons, tags, fields, links) adapts. */
+.surface-night,
+.surface-slate {
+  --paper: #11161a;
+  --paper-deep: #1a2126;
+  --ink: #eceeed;
+  --muted: #a9b4ba;
+  --line: rgb(236 238 237 / 0.16);
+  --accent: #d2a46a;
+  --surface: #161c20;
+  --field-bg: #1a2126;
+  --brass-lit: #d9ae74;
+  --brass-shade: #7a5a31;
+  background: var(--paper);
+  color: var(--ink);
+}
+.surface-slate {
+  --paper: #161d22;
+  --paper-deep: #1f282e;
+}
+
+.display {
+  font-variant-numeric: lining-nums;
+}
+.lining {
+  font-variant-numeric: lining-nums;
+}
+
+/* Hero additions. */
+.hero-bridge {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 45%;
+  background: linear-gradient(to bottom, rgb(17 22 26 / 0), #11161a 92%);
+  opacity: 0;
+  pointer-events: none;
+}
+.hero-beat {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 9rem;
+  margin-inline: auto;
+  width: 100%;
+  max-width: min(72rem, 100%);
+  padding-inline: 1.25rem;
+  font-size: clamp(1.75rem, 4.2vw, 3.25rem);
+  line-height: 1.1;
+  color: var(--ink);
+  opacity: 0;
+}
+.hero:not([data-scrub="true"]) .hero-beat,
+.hero:not([data-scrub="true"]) .hero-end {
+  display: none;
+}
+.hero-end {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 3.6rem;
+  margin-inline: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+  opacity: 0;
+}
+@media (min-width: 768px) {
+  .hero-beat {
+    padding-inline: 2rem;
+  }
+}
+
+/* ---- Scroll-driven motion (CSS only, off the main thread; no support = static and fully visible) */
+@keyframes lift {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 1.4rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes drift {
+  from {
+    transform: translate3d(0, var(--drift, 7%), 0) scale(var(--zoom, 1.16));
+  }
+  to {
+    transform: translate3d(0, calc(var(--drift, 7%) * -1), 0) scale(var(--zoom, 1.16));
+  }
+}
+@keyframes float-y {
+  from {
+    transform: translate3d(0, var(--float, 3rem), 0);
+  }
+  to {
+    transform: translate3d(0, calc(var(--float, 3rem) * -1), 0);
+  }
+}
+@keyframes draw {
+  from {
+    transform: scaleX(0);
+    opacity: 0.2;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+@keyframes grow {
+  from {
+    transform: scaleY(0.04);
+    opacity: 0.2;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes beacon {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.02);
+  }
+}
+.draw {
+  transform-origin: left center;
+}
+.extrude {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.beacon > ellipse {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@supports (animation-timeline: view()) {
+  .lift {
+    animation: lift linear both;
+    animation-timeline: view();
+    animation-range: entry calc(var(--i, 0) * 5%) entry calc(38% + var(--i, 0) * 5%);
+  }
+  .parallax {
+    animation: drift linear both;
+    animation-timeline: view();
+    animation-range: cover;
+  }
+  .float-y {
+    animation: float-y linear both;
+    animation-timeline: view();
+    animation-range: cover;
+  }
+  .draw {
+    animation: draw linear both;
+    animation-timeline: view();
+    animation-range: entry calc(8% + var(--n, 0) * 0.9%) entry calc(60% + var(--n, 0) * 0.9%);
+  }
+  .extrude {
+    animation: grow linear both;
+    animation-timeline: view();
+    animation-range: entry calc(var(--i, 0) * 3%) entry calc(55% + var(--i, 0) * 3%);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .beacon > ellipse {
+    animation: beacon 3.6s ease-in-out infinite;
+  }
+}
+
+/* ---- Gallery */
+.frame {
+  position: relative;
+  overflow: hidden;
+  background: var(--paper-deep);
+}
+.frame > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  border-top: 1px solid var(--ink);
+  padding-top: 0.7rem;
+  margin-top: 0.8rem;
+  font-size: 0.875rem;
+}
+.cap > span:last-child {
+  color: var(--muted);
+}
+
+/* ---- Apartments */
+.level-btn {
+  border: 1px solid transparent;
+  color: var(--muted);
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+.level-btn[aria-pressed="true"] {
+  color: var(--ink);
+  border-color: var(--ink);
+  background: var(--surface);
+}
+@media (hover: hover) and (pointer: fine) {
+  .level-btn:hover {
+    color: var(--ink);
+  }
+}
+.chip {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  padding: 0 0.9rem;
+  border: 1px solid var(--line);
+  font-size: 0.9rem;
+  color: var(--muted);
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+.chip[aria-pressed="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.apt-grid {
+  perspective: 1100px;
+}
+.apt-card {
+  position: relative;
+  height: 100%;
+  padding: 1.5rem;
+  border: 1px solid var(--line);
+  background: linear-gradient(165deg, #fff 0%, var(--paper-deep) 130%);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 1px 0 var(--line),
+    0 7px 0 -2px var(--paper-deep),
+    0 8px 0 -2px var(--line),
+    0 26px 30px -22px rgb(15 19 22 / 0.45);
+  transition:
+    transform 220ms var(--ease-out),
+    box-shadow 220ms var(--ease-out);
+}
+.apt-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 320ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .apt-card:hover {
+    transform: translateY(-5px) rotateX(2.5deg);
+    box-shadow:
+      inset 0 1px 0 #fff,
+      0 1px 0 var(--line),
+      0 7px 0 -2px var(--paper-deep),
+      0 8px 0 -2px var(--line),
+      0 38px 36px -24px rgb(15 19 22 / 0.5);
+  }
+  .apt-card:hover::before {
+    transform: scaleX(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .apt-card,
+  .apt-card::before,
+  .lift,
+  .parallax,
+  .float-y,
+  .draw,
+  .extrude {
+    transition: none;
+    animation: none;
+  }
+  .apt-card:hover {
+    transform: none;
+  }
+}
+
+/* ---- Finance figures */
+.fig {
+  font-family: var(--font-display-face), "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  font-variant-numeric: lining-nums;
+  line-height: 0.82;
+  letter-spacing: -0.03em;
+}
+
+/* ---- Interior band */
+.band {
+  position: relative;
+  overflow: hidden;
+  min-height: min(78svh, 46rem);
+  display: grid;
+  align-items: end;
+}
+.band > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.band-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgb(17 22 26 / 0.92), rgb(17 22 26 / 0.5) 45%, rgb(17 22 26 / 0.12));
+}
+
+/* Hairline section marker. */
+.mark {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.mark::before {
+  content: "";
+  width: 2.25rem;
+  height: 1px;
+  background: var(--accent);
 }

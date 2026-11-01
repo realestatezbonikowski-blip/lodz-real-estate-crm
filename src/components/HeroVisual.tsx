@@ -20,7 +20,7 @@ export function HeroVisual({ label, caption }: { label: string; caption: string 
           <ArchitecturalMotif label={label} className="h-full w-full" />
         </motion.div>
       </div>
-      <figcaption className="mt-3 text-xs text-muted">{caption}</figcaption>
+      <figcaption className="mt-3 text-[0.8125rem] text-muted">{caption}</figcaption>
     </figure>
   );
 }

@@ -40,7 +40,7 @@ export async function MediaFigure({ item }: { item: ProjectMedia }) {
           </div>
         )}
       </div>
-      <figcaption className="mt-2 text-xs uppercase tracking-[0.12em] text-muted">{label}</figcaption>
+      <figcaption className="mt-2 text-[0.8125rem] uppercase tracking-[0.1em] text-muted">{label}</figcaption>
     </figure>
   );
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { display, inter } from "@/lib/fonts";
+import { inter } from "@/lib/fonts";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pl" className={`${inter.variable} ${display.variable}`}>
+    <html lang="pl" className={`${inter.variable} crm`}>
       <body className="min-h-screen antialiased">{children}</body>
     </html>
   );

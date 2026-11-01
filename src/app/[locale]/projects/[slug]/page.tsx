@@ -44,7 +44,7 @@ export default async function ProjectPage({ params }: Props) {
           <div className="clip-reveal aspect-[4/3] overflow-hidden border border-border">
             <ArchitecturalMotif label={home("visualLabel")} className="h-full w-full" />
           </div>
-          <figcaption className="mt-3 text-xs text-muted">{home("visualCaption")}</figcaption>
+          <figcaption className="mt-3 text-[0.8125rem] text-muted">{home("visualCaption")}</figcaption>
         </figure>
         <div className="lg:col-span-5">
           <FactList project={project} />

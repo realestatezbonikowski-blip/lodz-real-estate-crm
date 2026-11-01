@@ -53,7 +53,7 @@ export function SiteNav({
 
       <button
         type="button"
-        className="btn btn-ghost md:hidden"
+        className="btn btn-ghost w-11 px-0 md:hidden"
         aria-expanded={open}
         aria-controls="mobile-nav"
         aria-label={open ? closeLabel : openLabel}
