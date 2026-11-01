@@ -5,7 +5,7 @@ The independent review, findings, secret-key analysis and live-test checklist ar
 [`security-review-phase-1b.md`](security-review-phase-1b.md). Dev project region: West EU (Ireland), `eu-west-1`.
 
 Not a migration, not applied: `supabase/planned/mfa_enforcement.sql` (future MFA requirement).
-Prepared but NOT yet applied to any project: migration `20261030110000_lead_intake_role.sql` (least-privilege intake role, Option B; creates a `NOLOGIN` role with no password; applying it needs the owner's approval).
+Applied to the DEVELOPMENT project (with the owner's approval; confirmed with `supabase migration list --linked` on 2026-11-01): migration `20261030110000_lead_intake_role.sql` (least-privilege intake role, Option B). The migration creates a `NOLOGIN` role with no password; login and the password were enabled afterwards by the owner with `npm run setup:intake` (see `lead-intake-credential.md`). Not applied to any production project.
 
 Migrations (`supabase/migrations/`, applied in filename order):
 
@@ -15,6 +15,8 @@ Migrations (`supabase/migrations/`, applied in filename order):
 | `20261029120100_security_policies.sql` | Revokes Supabase's default grants, helper functions, triggers, RLS policies, column grants, `record_lead_export` |
 | `20261029120200_submit_lead.sql` | `public.submit_lead()`, executable by `service_role` only |
 | `20261030100000_record_lead_export_null_scope.sql` | Fix found in review: `public.record_lead_export()` accepted a NULL `p_scope` (`NULL not in (...)` is NULL, and an `IF` treats that as false). Redefines only that function; its owner and grants are unchanged. Applied to dev after the first three. |
+| `20261030110000_lead_intake_role.sql` | Least-privilege `lead_intake` role (Option B): `NOLOGIN` and no password in the migration, connection limit 5, `statement_timeout` 5s, `EXECUTE` on `submit_lead` only. Applied to dev. |
+| `20261101090000_lead_follow_up.sql` | Nullable `leads.follow_up_on` (date) and `leads.next_action` (text, 1 to 200 characters), an index and `UPDATE` on those two columns for `authenticated`. Applied to dev on 2026-11-01. |
 
 ## 1. Schema
 
@@ -128,13 +130,13 @@ What they do **not** prove:
 
 ## 5. Migration application procedure (dev project only, after approval)
 
-Do not apply to a production project. Nothing here has been done yet.
+Do not apply to a production project. This procedure has been carried out for the dev project (all six migrations applied, checked 2026-11-01); it remains the procedure for any new project.
 
 1. Confirm the target is the **dev** project: URL and project ref match `docs/supabase-setup.md`.
 2. Confirm `npm run test:db` passes on the exact files to be applied, and the working tree is committed or at least reviewed.
 3. `npx supabase init` (creates `supabase/config.toml`; review it, nothing remote happens).
 4. `npx supabase login`, then `npx supabase link --project-ref <ref>`. You enter the database password yourself in the terminal; never paste it into chat.
-5. `npx supabase db push --dry-run --linked --skip-vault` and read the list of migrations it would apply. It should list exactly the migrations in `supabase/migrations/` that the target has not applied yet, in filename order (a fresh project: all four); anything else is a stop. It prints file names only, not SQL, so the real review is reading the files. `--skip-vault` is needed because `db push` otherwise updates Vault secrets from `config.toml`. Do not use `--password`, `--db-url`, `--include-all`, `--include-seed` or `--include-roles`, and never run `supabase config push`.
+5. `npx supabase db push --dry-run --linked --skip-vault` and read the list of migrations it would apply. It should list exactly the migrations in `supabase/migrations/` that the target has not applied yet, in filename order (a fresh project: all six); anything else is a stop. It prints file names only, not SQL, so the real review is reading the files. `--skip-vault` is needed because `db push` otherwise updates Vault secrets from `config.toml`. Do not use `--password`, `--db-url`, `--include-all`, `--include-seed` or `--include-roles`, and never run `supabase config push`.
 6. Only after a separate explicit go-ahead: `npx supabase db push --linked --skip-vault`. If it errors partway, stop and report the error text instead of re-running. See `docs/dev-migration-runbook.md` (Stages 3 and 4), which is the authoritative procedure.
 7. Dashboard → Auth: signups disabled; create the first user. Then bootstrap the owner in the SQL editor (this is deliberately not a migration):
    ```sql
@@ -153,7 +155,7 @@ Do not apply to a production project. Nothing here has been done yet.
 
 ## 7. Decisions
 
-**Decided by the owner (Phase 1C):** activity history stays append-only; contact-detail and assignment changes are audited; 100 web leads per hour and a 10-minute duplicate window are the initial defaults, held in `private.settings`; owner and assistant may both create manual leads; future-dated activities are not allowed; MFA will be enforced before production launch; Option B (dedicated intake role) is preferred but unverified (`docs/lead-intake-credential.md`).
+**Decided by the owner (Phase 1C):** activity history stays append-only; contact-detail and assignment changes are audited; 100 web leads per hour and a 10-minute duplicate window are the initial defaults, held in `private.settings`; owner and assistant may both create manual leads; future-dated activities are not allowed; MFA will be enforced before production launch; Option B (dedicated intake role) is preferred. It was unverified when decided; it has since been applied to dev and its pooler login checked, with some manual checks still open (`docs/lead-intake-credential.md`).
 
 **Still open** (the table below was written before these decisions; rows 2, 3, 4, 5 are now settled as stated above):
 

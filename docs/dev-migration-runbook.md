@@ -1,6 +1,6 @@
 # Runbook: applying the migrations to the DEVELOPMENT Supabase project
 
-Status (dev project): **Stages 1–4 done** (CLI installed and linked; the first three migrations applied; the fourth, `20261030100000_record_lead_export_null_scope`, applied on 2026-10-30 after a dry-run that listed only it). **Stage 6a/6b partly done** (read-only inventory, role-impersonation probes in read-only transactions, Advisors, `npm run live:anon`); results are in `docs/security-review-phase-1b.md` section 5a. **Not done:** Stage 5 (first owner), 6c, the dashboard Auth/Data API checks, Option B. Each remaining stage needs your explicit go-ahead. For a fresh project (for example production) the steps below apply as written, with all four migrations.
+Status (dev project): **Stages 1–4 done** (CLI installed and linked; the first three migrations applied; the fourth, `20261030100000_record_lead_export_null_scope`, applied on 2026-10-30 after a dry-run that listed only it; the fifth, `20261030110000_lead_intake_role`, and the sixth, `20261101090000_lead_follow_up`, were applied afterwards, and on 2026-11-01 all six are applied: `supabase migration list --linked` shows them in sync and a dry-run reports the remote up to date). **Stage 6a/6b partly done** (read-only inventory, role-impersonation probes in read-only transactions, Advisors, `npm run live:anon`); results are in `docs/security-review-phase-1b.md` section 5a. **Not done (as recorded here):** 6c, the dashboard Auth/Data API checks, and the open Option B criteria (the role is applied and `npm run verify:intake` passed on 2026-11-01; the rest is listed in `docs/lead-intake-credential.md`). Stage 5: one active owner profile exists on dev as of 2026-11-01 (read-only count); this runbook does not record how it was created. Each remaining stage needs your explicit go-ahead. For a fresh project (for example production) the steps below apply as written, with all six migrations (the first dev run had four). Production has not been migrated or configured.
 Target: development project, West EU (Ireland), `eu-west-1`. Never run this against a production project.
 
 Rules for the whole procedure
@@ -12,7 +12,7 @@ Rules for the whole procedure
 
 - [ ] `npm run test:db` passes on exactly the files you are about to apply (98 tests at the time of writing).
 - [ ] `npm run lint`, `npm run typecheck`, `npm run build` pass.
-- [ ] You have read the files in `supabase/migrations/` (four at the time of writing) once more. **The dry-run prints only migration file names, not their SQL**, so this reading is the real review.
+- [ ] You have read the files in `supabase/migrations/` (four at the time of writing, six now) once more. **The dry-run prints only migration file names, not their SQL**, so this reading is the real review.
 - [ ] In the Supabase dashboard: Authentication → email signups are **disabled**; anonymous sign-ins are **disabled**.
 - [ ] `.env.local` exists; `npm run check:env` is all ✔.
 - [ ] You can see the dev project's region (`eu-west-1`) and project ref in the dashboard, and the project contains **no data you care about**.
@@ -55,7 +55,7 @@ npx supabase db push --dry-run --linked --skip-vault
 `--skip-vault` matters: per the CLI help, `db push` otherwise updates Vault secrets from `config.toml` before migrations. `--linked` makes the target explicit. Never add `--include-all`, `--include-seed`, `--include-roles`, `--db-url` or `--password`. The CLI will ask for the database password; type it there.
 
 Inspect the output:
-- On a fresh project it should list **exactly four** migrations, in this order: `20261029120000_core_schema`, `20261029120100_security_policies`, `20261029120200_submit_lead`, `20261030100000_record_lead_export_null_scope`. On a project that already has some applied, it lists only the rest. Anything else (extra migrations, "already applied", a different project) is a stop.
+- On a fresh project it should list **exactly six** migrations (four when the dev project was first migrated), in this order: `20261029120000_core_schema`, `20261029120100_security_policies`, `20261029120200_submit_lead`, `20261030100000_record_lead_export_null_scope`, `20261030110000_lead_intake_role`, `20261101090000_lead_follow_up`. On a project that already has some applied, it lists only the rest. Anything else (extra migrations, "already applied", a different project) is a stop.
 - It does not show SQL and does not validate permissions. Per Supabase's CLI reference the real run also creates the history table `supabase_migrations.schema_migrations` on first use.
 - `supabase/planned/` files are not listed (they are not in `migrations/`). If they appear, stop.
 
@@ -114,7 +114,7 @@ It sends requests with only the publishable key and prints status codes: reading
 
 **6d. Settings that tests cannot see.** Data API exposes only `public`; GraphQL exposure; Security Advisor and Performance Advisor (the two public `SECURITY DEFINER` functions will be reported and are intentional); the real `aal` claim after TOTP enrolment; Postgres version and extensions.
 
-**6e. Option B pass criteria** (`docs/lead-intake-credential.md`) are a separate, later stage and need a new migration for the role.
+**6e. Option B pass criteria** (`docs/lead-intake-credential.md`) are a separate, later stage. The role's migration (`20261030110000_lead_intake_role`) is applied to dev and `npm run verify:intake` passed on 2026-11-01; the criteria still open are listed in `docs/lead-intake-credential.md`.
 
 ## Stage 7: close out
 

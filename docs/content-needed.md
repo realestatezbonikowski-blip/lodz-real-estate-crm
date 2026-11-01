@@ -25,11 +25,11 @@ Items 1, 2, 4 and 6 are launch gates. Also: the real privacy notice text and ver
 | Variable / task | Where | Who |
 |---|---|---|
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (public) and `TURNSTILE_SECRET_KEY` (server only) | `.env.local` / hosting secret store | You, after creating a Cloudflare Turnstile widget for the real domain |
-| `LEAD_INTAKE_DATABASE_URL` (server only) | `.env.local` / hosting secret store | You, only after the Option B steps in `docs/lead-intake-credential.md` pass. User must be `lead_intake.<project-ref>`; `npm run check:env` verifies the shape without printing it |
+| `LEAD_INTAKE_DATABASE_URL` (server only) | `.env.local` / hosting secret store | You, only after the Option B steps in `docs/lead-intake-credential.md` pass. User must be `lead_intake.<project-ref>`; `npm run check:env` verifies the shape without printing it. Dev status 2026-11-01: set in `.env.local` and `npm run verify:intake` passed; the other criteria in that file are still open, and no hosting environment has been configured yet |
 | `NEXT_PUBLIC_SITE_URL` | Real domain (used for the Origin check) | You |
-| Apply `20261030110000_lead_intake_role.sql` to the dev project | Remote change | Needs your explicit approval (exact operation in `docs/lead-intake-credential.md`) |
-| Set the `lead_intake` password and enable login | psql `\password lead_intake`, then `alter role lead_intake with login` | You, never in chat or in git |
-| A `projects` row with slug `radomska`, `is_active` and `is_published` true | Database (after the first owner exists) | Owner |
+| Apply `20261030110000_lead_intake_role.sql` to the dev project | Remote change | Done on the dev project with your approval (applied 2026-10-30, confirmed 2026-11-01); a production project would need its own approval (exact operation in `docs/lead-intake-credential.md`) |
+| Set the `lead_intake` password and enable login | psql `\password lead_intake`, then `alter role lead_intake with login` | You, never in chat or in git. Done on dev with `npm run setup:intake` (it replaced the psql route); a production project would need its own |
+| A `projects` row with slug `radomska`, `is_active` and `is_published` true | Database (after the first owner exists) | Owner. Created and verified on the dev project on 2026-11-01 (name "Radomska 5", city "Łódź", status `planning`); a production project needs its own row |
 | First owner account, then MFA enrolment | Runbook Stage 5, `supabase/planned/mfa_enforcement.sql` | You |
 | Hosting provider, domain, production Supabase project, backups | Deployment | You |
 | Native-speaker review of the Ukrainian and English text | `messages/uk.json`, `messages/en.json` | Reviewer |
@@ -38,7 +38,7 @@ Items 1, 2, 4 and 6 are launch gates. Also: the real privacy notice text and ver
 
 Built and tested locally: server-side login, role check from `profiles`, leads list with status counts, search (name, e-mail, phone), filters (status, project, source, assignee, archive), lead detail, status change, assignment, notes/calls/e-mails/meetings, contact edit, archive/restore, manual leads, owner-only delete. Unit and structural tests pass; screens were checked in headless Chrome with fake data (desktop, tablet, phone).
 
-**Not verified live**, because no staff account exists: sign-in, the real PostgREST reads and writes of these screens, and the status codes of RLS-filtered writes. After the owner exists (runbook Stage 5), a short smoke test is needed: sign in; create a manual lead; change its status (a `status_change` row must appear in the history); add a note; assign; archive and restore; confirm the lead shows up in the list; sign out; confirm `/admin/leads` redirects to login. Then create an assistant and confirm that the delete section is hidden and a direct delete is refused. MFA is not enforced yet (`supabase/planned/mfa_enforcement.sql`); it is a pre-production requirement.
+**Not verified live** (written when no staff account existed; one active owner profile has since been seen on the dev project, 2026-11-01, but this smoke test is not recorded as done): sign-in, the real PostgREST reads and writes of these screens, and the status codes of RLS-filtered writes. After the owner exists (runbook Stage 5), a short smoke test is needed: sign in; create a manual lead; change its status (a `status_change` row must appear in the history); add a note; assign; archive and restore; confirm the lead shows up in the list; sign out; confirm `/admin/leads` redirects to login. Then create an assistant and confirm that the delete section is hidden and a direct delete is refused. MFA is not enforced yet (`supabase/planned/mfa_enforcement.sql`); it is a pre-production requirement.
 
 ## 3c. MFA (TOTP): built, not enforced
 

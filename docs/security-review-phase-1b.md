@@ -1,7 +1,7 @@
 # Security review of the database design (Phase 1B)
 
 Scope: the three migrations, both test files and the database docs, reviewed without assuming that passing tests mean the design is secure.
-Status: **nothing has been applied to Supabase.** All results below come from local tests on an in-process Postgres (PGlite), which is not Supabase.
+Status when this review was written: **nothing had been applied to Supabase.** Sections 1 to 5 come from local tests on an in-process Postgres (PGlite), which is not Supabase. Since then the migrations have been applied to the dev project only (all six, checked 2026-11-01); section 5a records the live results of 2026-10-30. Nothing has been applied to a production project.
 Supabase project: development, region **West EU (Ireland), `eu-west-1`**, confirmed by the owner. It must not be changed.
 
 > **Update (Phase 1C):** owner decisions are recorded in `docs/decisions.md` (22–28). Since this review: contact and assignment changes are audited, limits moved to `private.settings`, and Option B was researched against Supabase's connection documentation (`docs/lead-intake-credential.md`). The migration steps are in `docs/dev-migration-runbook.md`. Decisions D2, D3, D4, D5, D6, D7 below are now settled; D1 remains "prefer B, verify".
@@ -70,9 +70,9 @@ Ways it could leak, and mitigations:
 
 ### Option B: dedicated least-privilege database role (recommended if it works live)
 
-The migration `20261030110000_lead_intake_role.sql` (prepared, not applied) creates a role `lead_intake` that can execute `submit_lead` and nothing else (no table access, no schema `private`, no bypass of RLS, member of no role). The server connects to Postgres directly with it. A leaked credential could only submit junk leads, which the circuit breaker bounds.
+The migration `20261030110000_lead_intake_role.sql` (prepared during this review; since applied to the dev project, see `docs/lead-intake-credential.md`) creates a role `lead_intake` that can execute `submit_lead` and nothing else (no table access, no schema `private`, no bypass of RLS, member of no role). The server connects to Postgres directly with it. A leaked credential could only submit junk leads, which the circuit breaker bounds.
 
-Locally tested: it can submit and is denied on every table, `record_lead_export` and `private`. **Not proven live:** whether a custom role can connect through Supabase's pooler, what the serverless connection behaviour is, and the extra driver dependency. Decide in Phase 3 after a live test; fall back to Option A with the mitigations above.
+Locally tested: it can submit and is denied on every table, `record_lead_export` and `private`. **Not proven live:** whether a custom role can connect through Supabase's pooler, what the serverless connection behaviour is, and the extra driver dependency. Decide in Phase 3 after a live test; fall back to Option A with the mitigations above. *Update 2026-11-01:* on the dev project the pooler login and the privilege boundary were verified with `npm run verify:intake` (transaction mode 6543 and session mode 5432). Behaviour from the real hosting environment and the remaining manual criteria in `docs/lead-intake-credential.md` are still open.
 
 ## 3. RLS policy review
 
@@ -146,13 +146,13 @@ How: `supabase db query --linked` (read-only SQL via the Management API; role-im
 - Auth dashboard settings: email signups disabled; anonymous sign-ins disabled; TOTP available (item 5).
 - Data API exposed schemas: only `public` (item 4). The Advisor confirms `public` is exposed; `private` was not probed through REST.
 - Staff behaviour with real accounts: assistant/owner permissions through the API, the status returned by an RLS-filtered `UPDATE`/`DELETE`, the real `aal` claim after TOTP enrolment (items 3 and 5).
-- Option A secret-key behaviour and Option B pooler login (item 7).
+- Option A secret-key behaviour and Option B pooler login (item 7). *(Option B pooler login: verified on dev on 2026-11-01 with `npm run verify:intake`; Option A behaviour is still untested.)*
 - Backups and a restore test (item 9).
 - The first owner has not been created; `profiles` is empty.
 
 ## 6. Proposed safe migration procedure (for later approval)
 
-Steps 1–7 below have been done for the **dev project** (the migration set is now four files). Steps 8 onward are not done. Each remaining step needs your explicit go-ahead.
+Steps 1–7 below have been done for the **dev project** (the migration set was four files at that point; it is now six, all applied to dev as of 2026-11-01). Steps 8 onward are not done. Each remaining step needs your explicit go-ahead.
 
 1. Decide D1–D3 and Option A or B for intake (section 7).
 2. Review the three migration files and the two `planned/` files once more. Optionally commit locally (only when you ask me to).

@@ -1,6 +1,7 @@
 # Deploy checklist: GitHub + Render free demo
 
-Nothing here has been done for you. No remote exists, no Render account was used, nothing was pushed or deployed.
+When this was written, nothing had been done for you: no remote existed, no Render account was used, nothing was pushed or deployed.
+*Status 2026-11-01:* the project is pushed to GitHub (`realestatezbonikowski-blip/lodz-real-estate-crm`, branch `main`, initial commit `79716cd`). Render has not been deployed, and no production environment has been deployed or configured. The steps below are kept as written; section 2 notes what is done.
 The Render facts below come from general knowledge and the repository itself; **no current Render documentation was fetched**,
 so confirm the free-tier limits and the blueprint field names on render.com/docs before relying on them.
 
@@ -36,9 +37,11 @@ All `NEXT_PUBLIC_*` values are inlined at build time: set them **before** the fi
 Run `npm run check:env` locally first (prints names and pass/fail only).
 
 ## 2. Git and GitHub
+*Status 2026-11-01: steps 1 to 5 are done. The repository `realestatezbonikowski-blip/lodz-real-estate-crm` exists, `origin` is set and `main` was pushed without force as one initial commit, `79716cd`, instead of the several logical commits suggested in step 5.*
+
 1. Create an empty repository on your GitHub account (no README).
 2. `git remote add origin <url>`
-3. Review what is uncommitted: `git status` (46 paths). It contains several different bodies of work:
+3. Review what is uncommitted: `git status` (46 paths when this was written). It contained several different bodies of work:
    * public concept redesign (messages, `src/components/concept`, `src/app/[locale]`, `public/concept`, `design-system/`),
    * CRM redesign (`src/features/crm/components`, `src/app/admin/(app)`, `globals.css`),
    * security/MFA (`src/features/mfa`, `src/lib/security`, `src/lib/supabase/cookie-policy.ts`, `src/proxy.ts`, `crm/auth.ts`, login),
@@ -52,7 +55,7 @@ Run `npm run check:env` locally first (prints names and pass/fail only).
 ## 3. Supabase (dashboard)
 1. Auth -> URL Configuration: Site URL = the Render URL; add `https://<service>.onrender.com/**` to Redirect URLs.
 2. Confirm TOTP MFA is enabled, the migrations are applied to this project, the owner has a `profiles` row (`docs/dev-migration-runbook.md`).
-3. Nothing in this task applied or changed any migration.
+3. Nothing in this task applied or changed any migration. (Written then. Since 2026-11-01 all six migrations are applied to the dev project; no production project has been migrated or configured.)
 
 ## 4. Turnstile (Cloudflare)
 Add the Render hostname to the widget's allowed domains; use the production site/secret key pair (not the dummy test keys).

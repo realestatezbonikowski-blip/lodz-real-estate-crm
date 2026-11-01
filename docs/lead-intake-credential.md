@@ -1,6 +1,8 @@
 # Lead intake credential: Option A vs Option B (decision record)
 
-Status (2026-10-30): **the `lead_intake` role exists on the DEV project (migration `20261030110000_lead_intake_role.sql` applied with the owner's approval) but cannot log in and has no password. The pooler connection is NOT yet verified.** Verified live right after applying: `login=false`, not superuser, no BYPASSRLS, no role memberships, connection limit 5, `statement_timeout=5s`, `search_path=''`, `EXECUTE` on `public.submit_lead` only (no other function in `public` or `private`), `USAGE` on schema `public` only (not `private`), no privilege on any table.
+Status (2026-11-01): **the `lead_intake` role exists on the DEV project (`gkibtcdyjhuwljkqzyfl`) and can log in.** Migration `20261030110000_lead_intake_role.sql` is applied there, as are all six project migrations (`supabase migration list --linked`, checked 2026-11-01). The owner enabled login and created the credential with `npm run setup:intake`. `npm run verify:intake` passed on 2026-11-01: connection as `lead_intake` through the shared pooler in transaction mode (6543) and session mode (5432), `statement_timeout` 5s, `EXECUTE` on `submit_lead` (not called), and denied with 42501 on `public.leads`, `public.profiles`, `private.settings`, `create table`, `record_lead_export` and `private.is_owner`. **Still open:** pass criteria 3 (a fake lead through `submit_lead`), 6 (idle reconnect, concurrency), 7 (rotation), 8 and 9 (real hosting environment). **This is the dev project only: nothing has been applied to or configured on a production project.**
+
+Earlier status (2026-10-30, kept for history): **the `lead_intake` role exists on the DEV project (migration `20261030110000_lead_intake_role.sql` applied with the owner's approval) but cannot log in and has no password. The pooler connection is NOT yet verified.** Verified live right after applying: `login=false`, not superuser, no BYPASSRLS, no role memberships, connection limit 5, `statement_timeout=5s`, `search_path=''`, `EXECUTE` on `public.submit_lead` only (no other function in `public` or `private`), `USAGE` on schema `public` only (not `private`), no privilege on any table.
 Owner decision (recorded): prefer Option B, but do not assume it works until verified.
 
 ## 1. The problem
@@ -9,7 +11,7 @@ Owner decision (recorded): prefer Option B, but do not assume it works until ver
 
 ## 2. Option B: dedicated `lead_intake` database role
 
-File: `supabase/migrations/20261030110000_lead_intake_role.sql` (prepared and tested locally; **not applied to any project**; it was moved from `supabase/planned/` so the tests cover the exact file that would be pushed). The server adapter is `src/features/leads/server/postgres-submitter.ts` and is wired in `src/app/api/leads/route.ts` only when `LEAD_INTAKE_DATABASE_URL` is set, which must happen only after the live pass criteria below.
+File: `supabase/migrations/20261030110000_lead_intake_role.sql` (tested locally and **applied to the DEV project** (see Status above); not applied to any production project; it was moved from `supabase/planned/` so the tests cover the exact file that would be pushed). The server adapter is `src/features/leads/server/postgres-submitter.ts` and is wired in `src/app/api/leads/route.ts` only when `LEAD_INTAKE_DATABASE_URL` is set, which must happen only after the live pass criteria below.
 
 ### How the role would authenticate
 
@@ -58,6 +60,8 @@ TLS: use at least `sslmode=require`; prefer `verify-full` with Supabase's root c
 9. In Phase 3, repeat 2–3 from the real hosting environment.
 
 ### Verification plan and current blocker (2026-10-30)
+
+> **Historical.** This section records the state on 2026-10-30, before the migration was applied and before the credential existed. Its "not applied" and "has not been started" statements describe that moment. For the current state see Status at the top of this file.
 
 Known without any remote change: the linked project's shared pooler host is `aws-0-eu-west-1.pooler.supabase.com` (recorded by the CLI in `supabase/.temp/pooler-url`, no password in it); the Postgres server is 17.11; the role's privileges are already proven locally (`hardening.test.mjs`).
 
@@ -116,4 +120,4 @@ The safest practical alternative is **Option A with compensating controls**, ado
 
 ## 5. Recommendation
 
-**Adopt Option B if, and only if, every pass criterion above succeeds on the dev project. Otherwise adopt Option A with the compensating controls and record that decision.** Until the live test, both are plans. The database side is the same either way: `submit_lead` is unchanged, and adding `lead_intake` later is one small additive migration (a copy of the planned file without any password).
+**Adopt Option B if, and only if, every pass criterion above succeeds on the dev project. Otherwise adopt Option A with the compensating controls and record that decision.** As of 2026-11-01 criteria 1, 2, 4 and 5 hold on the dev project (see Status), while 3 and 6 to 9 are still open, so the adoption of Option B is not yet recorded in `docs/decisions.md`. The database side is the same either way: `submit_lead` is unchanged, and adding `lead_intake` later is one small additive migration (a copy of the planned file without any password).

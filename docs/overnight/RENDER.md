@@ -1,7 +1,7 @@
 # Render free demo: readiness
 
-**Status: prepared, NOT deployed.** There is no git remote and no Render account access here, so no deployment was attempted and
-no URL exists. `render.yaml` (repo root) is a Blueprint for one free Web Service.
+**Status: prepared, NOT deployed.** There was no git remote and no Render account access when this was written. As of 2026-11-01 the repository is on GitHub
+(`realestatezbonikowski-blip/lodz-real-estate-crm`, `main`, `79716cd`), but no deployment has been attempted and no URL exists. `render.yaml` (repo root) is a Blueprint for one free Web Service.
 
 ## What the app needs
 * One Node web process (`next start`), no background worker, no persistent disk, no local files beyond the build output.
@@ -29,7 +29,7 @@ Never put the Supabase service/secret key in a `NEXT_PUBLIC_` variable.
 ## Supabase dashboard steps (manual)
 1. Auth -> URL Configuration: Site URL = the Render URL; add it (and `/**`) to Redirect URLs.
 2. Confirm TOTP MFA is enabled; the owner account exists with a `profiles` row (docs/dev-migration-runbook.md).
-3. The migrations must already be applied to the project you point at (Phase 1-4 are; the `lead_intake` role too).
+3. The migrations must already be applied to the project you point at. On the dev project all six are applied as of 2026-11-01, including the `lead_intake` role and the follow-up migration; a production project would need them applied too, and no production project has been migrated or configured.
 
 ## Free-tier behaviour to expect (from general knowledge of Render's free web services; verify on render.com/docs/free)
 Services spin down after ~15 minutes without traffic, so the first request after idle takes tens of seconds; limited RAM/CPU;
@@ -38,7 +38,7 @@ progressively, which is fine on free hosting but slow on the very first cold req
 
 ## Steps for you
 1. Create a GitHub repository you own, `git remote add origin <url>`, push the intended commit(s) (review `git status`: the
-   working tree still holds uncommitted security/CRM work that must be committed deliberately).
+   working tree still holds uncommitted security/CRM work that must be committed deliberately). *Done 2026-11-01: pushed as commit `79716cd`; that remark about uncommitted work no longer applies.*
 2. Render -> New -> Blueprint -> pick the repo (reads `render.yaml`), fill the `sync: false` values, deploy.
 3. Do the Supabase and Turnstile steps above, then open `/pl`, `/admin/login` and test an enquiry and an MFA sign-in.
 

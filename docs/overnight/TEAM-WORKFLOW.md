@@ -1,6 +1,6 @@
 # CRM team workflow: audit, what was built, what you must configure
 
-Nothing was committed, pushed, deployed, or applied to a remote database. The task text you sent was cut off in the middle of
+When this report was written nothing had been committed, pushed, deployed, or applied to a remote database (the migration's later status is in section 3). The task text you sent was cut off in the middle of
 Phase 6 ("Check existing MFA"); phases 1 to 5 were done in full, and Phase 6 was covered by reviewing the existing schema, RLS and
 MFA code (below).
 
@@ -41,11 +41,12 @@ MFA code (below).
 * **Help**: `/admin/help` (short guide using the real tab and button names + a who-can-do-what table) and a first-steps panel for the owner
   with real numbers (is there an opiekun? how many leads are unassigned?).
 
-## 3. Database: ONE new migration, not applied anywhere
+## 3. Database: ONE new migration (applied to the dev project on 2026-11-01; not applied to any production project)
 `supabase/migrations/20261101090000_lead_follow_up.sql`: adds nullable `follow_up_on date` and `next_action text` (length/control-character
 checks) to `public.leads`, an index, and `grant update (follow_up_on, next_action)`. No policy, table or status was added or changed.
 The local database tests (98) pass with it. **Until you apply it**, the CRM keeps working: lists and details fall back to the old columns and
 saving a follow-up shows "dostępne po zastosowaniu migracji". Apply it per `docs/dev-migration-runbook.md` when you are ready.
+*Update 2026-11-01:* it has been applied to the dev project with `supabase db push --linked --skip-vault`, after a dry-run that listed only this file. The two columns, the check constraint, the index and the `authenticated` update grant were checked in the database. The text above describes the state before it was applied.
 
 ## 4. Access model (a decision for you)
 Existing RLS: **every active staff member can read and update every lead** (`leads_select_staff`, `leads_update_staff`); deleting is owner-only;
@@ -69,4 +70,4 @@ profile failure rolled back, deactivation, bad/expired token, wrong token type, 
 unauthenticated access to team and set-password refused, first-steps, quick views, follow-up save, reassign, help page, contrast (0 below AA),
 no overflow at 320/390/768/1280, mobile drawer. Unit tests cover the new schemas and the structural security rules. **Not tested**: an
 actual e-mail delivery, the real Supabase Admin API, an `assistant` account's view (the fixture signs everyone in as the owner; the
-owner-only restriction is covered by `requireOwner()` and the structural tests), and the migration on a live database.
+owner-only restriction is covered by `requireOwner()` and the structural tests), and the migration on a live database (since 2026-11-01 it is applied to dev and its columns and grants were checked in the database; the CRM's follow-up save has not been tested against it).
