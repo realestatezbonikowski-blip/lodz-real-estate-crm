@@ -6,8 +6,9 @@ services:
     name: radomska-crm-demo
     runtime: node
     plan: free
-    # Create the service from a GitHub repo you own (there is no git remote configured yet).
-    buildCommand: npm ci && npm run build
+    # Create the service from the GitHub repo realestatezbonikowski-blip/lodz-real-estate-crm (branch main).
+    # --include=dev: the build needs devDependencies (tailwindcss, typescript, @types/*) even if the host sets NODE_ENV=production.
+    buildCommand: npm ci --include=dev && npm run build
     # Bind to all interfaces on the port Render provides.
     startCommand: npx next start -H 0.0.0.0 -p $PORT
     healthCheckPath: /pl

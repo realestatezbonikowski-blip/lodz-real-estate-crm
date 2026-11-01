@@ -19,6 +19,7 @@
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | public, **build time** | Cloudflare Turnstile site key (add the Render hostname to the widget's allowed domains) |
 | `TURNSTILE_SECRET_KEY` | secret, server | enquiries are refused with 503 without it |
 | `LEAD_INTAKE_DATABASE_URL` | secret, server | least-privilege `lead_intake` role (docs/lead-intake-credential.md); alternative `SUPABASE_SECRET_KEY` only if that is rejected |
+| `SUPABASE_TEAM_ADMIN_KEY` | secret, server, optional | enables team invitations on `/admin/team` (`TEAM-WORKFLOW.md`); without it the CRM works but cannot invite. A Supabase secret key kept only in the server environment; do not reuse `SUPABASE_SECRET_KEY` (intake conflict) |
 | `MFA_MODE` | server | `enrolled` (default), `required`, `off` |
 | `TRUSTED_PROXY_HEADER` | server, optional | leave unset unless you have verified which header Render's proxy overwrites |
 | `NEXT_PUBLIC_ALLOW_INDEXING` | public, optional | keep unset: the site stays noindex |

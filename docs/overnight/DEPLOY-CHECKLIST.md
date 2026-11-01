@@ -16,7 +16,7 @@ create the service manually in the dashboard with the same commands.
 **Required for the site + enquiries to work**
 | Name | Where it is used | Public? |
 |---|---|---|
-| `NEXT_PUBLIC_SITE_URL` | metadata, auth redirects | yes, **build time** |
+| `NEXT_PUBLIC_SITE_URL` | enquiry origin validation (`/api/leads` refuses any other origin) and the team-invitation redirect URL | yes, **build time** |
 | `NEXT_PUBLIC_SUPABASE_URL` | browser + server Supabase client | yes, **build time** |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | same; must be the `sb_publishable_...` key (`proxy.ts` refuses an `sb_secret_` key) | yes, **build time** |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | enquiry form widget (without it the form stays disabled) | yes, **build time** |
