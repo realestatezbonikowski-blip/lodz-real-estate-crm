@@ -5,5 +5,6 @@ import nextTs from "eslint-config-next/typescript";
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
-  globalIgnores([".next/**", "out/**", "next-env.d.ts"]),
+  // .claude/ holds third-party agent skills (their own scripts), not application code.
+  globalIgnores([".next/**", "out/**", "next-env.d.ts", ".claude/**"]),
 ]);

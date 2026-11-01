@@ -45,7 +45,8 @@ export type Deps = {
   onEvent?: (event: "rate_limited_by_database" | "submit_error" | "intake_unavailable") => void;
 };
 
-export type HandlerRequest = { origin: string | null; clientKey: string; bodyText: string };
+/** clientKey is undefined when no trusted client address is known: the per-client limit is then skipped, never shared. */
+export type HandlerRequest = { origin: string | null; clientKey?: string; bodyText: string };
 
 export type HandlerResponse = {
   status: number;
@@ -70,8 +71,10 @@ export async function handleLeadSubmission(deps: Deps, req: HandlerRequest): Pro
   if (!deps.allowedOrigin) return res(503, { status: "unavailable" });
   if (req.origin !== deps.allowedOrigin) return res(403, { status: "forbidden" });
 
-  const limit = deps.limiter.check(req.clientKey);
-  if (!limit.allowed) return res(429, { status: "too_many_requests" }, limit.retryAfterSec);
+  if (req.clientKey) {
+    const limit = deps.limiter.check(req.clientKey);
+    if (!limit.allowed) return res(429, { status: "too_many_requests" }, limit.retryAfterSec);
+  }
 
   const max = deps.maxBodyBytes ?? 10_000;
   if (new TextEncoder().encode(req.bodyText).length > max) return res(413, { status: "invalid", fields: ["body"] });

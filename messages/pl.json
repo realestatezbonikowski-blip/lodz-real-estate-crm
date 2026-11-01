@@ -22,7 +22,7 @@
     "legalTitle": "Informacje prawne",
     "privacy": "Polityka prywatności",
     "legalPlaceholder": "[Pozostałe informacje prawne – oczekują na zatwierdzenie]",
-    "draftNote": "Strona jest w przygotowaniu. Treści mają charakter roboczy."
+    "draftNote": "Prezentacja koncepcyjna. Wizualizacje, dane przykładowe i warunki finansowania mają charakter poglądowy, wymagają potwierdzenia przez dewelopera i nie stanowią oferty."
   },
   "Placeholder": {
     "badge": "Treść do uzupełnienia"
@@ -30,7 +30,7 @@
   "Home": {
     "eyebrow": "Łódź",
     "heading": "Nowe mieszkania w Łodzi",
-    "lead": "Inwestycja Rodomska. Strona jest w przygotowaniu, a kolejne informacje pojawią się po ich zatwierdzeniu.",
+    "lead": "Inwestycja Radomska. Strona jest w przygotowaniu, a kolejne informacje pojawią się po ich zatwierdzeniu.",
     "ctaProject": "Poznaj inwestycję",
     "ctaContact": "Zostaw kontakt",
     "visualLabel": "Abstrakcyjna ilustracja kompozycji architektonicznej",
@@ -59,7 +59,7 @@
       "completed": "Zakończona"
     },
     "items": {
-      "rodomska": {
+      "radomska": {
         "name": "Radomska 5",
         "summary": "[Opis inwestycji – do uzupełnienia po dostarczeniu zatwierdzonych danych.]"
       }

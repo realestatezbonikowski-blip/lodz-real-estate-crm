@@ -14,7 +14,7 @@ describe("server actions", () => {
     .map((chunk) => ({ name: chunk.slice(0, chunk.indexOf("(")), body: chunk.slice(chunk.indexOf("{") + 1) }));
 
   test("every exported action was found", () => {
-    assert.deepEqual(fns.map((f) => f.name).sort(), ["addActivity", "assignLead", "createManualLead", "deleteLead", "setArchived", "signIn", "signOut", "updateContact", "updateLeadStatus"]);
+    assert.deepEqual(fns.map((f) => f.name).sort(), ["addActivity", "assignLead", "createManualLead", "deleteLead", "setArchived", "setFollowUp", "signIn", "signOut", "updateContact", "updateLeadStatus"]);
   });
 
   test("every action except sign-in/out authorises the caller first", () => {
@@ -41,6 +41,34 @@ describe("server actions", () => {
   });
 });
 
+describe("client addresses and login limiting", () => {
+  const route = readFileSync("src/app/api/leads/route.ts", "utf8");
+
+  test("no code reads a client-supplied address header directly; only trustedClientKey does", () => {
+    for (const [name, src] of [["actions.ts", actions], ["route.ts", route]] as const) {
+      assert.ok(!/x-forwarded-for|x-real-ip|cf-connecting-ip/i.test(src), `${name} must not read forwarding headers itself`);
+      assert.match(src, /trustedClientKey\(/, `${name} must derive the client key through trustedClientKey`);
+    }
+  });
+
+  test("there is no shared fallback bucket", () => {
+    for (const src of [actions, route]) assert.ok(!/["']unknown["']/.test(src), 'a literal "unknown" bucket would let anyone lock out everyone');
+  });
+
+  test("signIn goes through attemptLogin, and answers every non-success with the outcome only", () => {
+    const body = actions.slice(actions.indexOf("export async function signIn"), actions.indexOf("export async function signOut"));
+    assert.match(body, /attemptLogin\(/);
+    assert.match(body, /redirect\(`\/admin\/login\?error=\$\{outcome\}`\)/);
+    assert.ok(!/signInWithPassword/.test(body.replace(/authenticate:[\s\S]*?classifyAuthError\(error\);\n {6}\},/, "")), "signInWithPassword may only be called inside the authenticate callback");
+  });
+
+  test("the login page shows only fixed messages for the error codes", () => {
+    const page = readFileSync("src/app/admin/login/page.tsx", "utf8");
+    for (const code of ["invalid", "rate", "unavailable", "no-access"]) assert.match(page, new RegExp(`"?${code}"?:`), `${code} message missing`);
+    assert.match(page, /error && ERRORS\[error\]/, "an unknown ?error= value must not be rendered");
+  });
+});
+
 describe("admin pages", () => {
   function* pages(dir: string): Generator<string> {
     for (const n of readdirSync(dir)) {
@@ -52,11 +80,11 @@ describe("admin pages", () => {
   test("every page under the authenticated group calls requireStaff (the shell layout does too)", () => {
     const layout = readFileSync("src/app/admin/(app)/layout.tsx", "utf8");
     assert.match(layout, /requireStaff\(\)/);
-    for (const p of pages("src/app/admin/(app)")) assert.match(readFileSync(p, "utf8"), /requireStaff\(\)/, `${p} must authorise the caller itself`);
+    for (const p of pages("src/app/admin/(app)")) assert.match(readFileSync(p, "utf8"), /require(Staff|Owner)\(\)/, `${p} must authorise the caller itself`);
   });
-  test("only the login page and the index sit outside the authenticated group", () => {
+  test("only the login page, the index, the two MFA screens and the invitation password page sit outside the authenticated group", () => {
     const outside = [...pages("src/app/admin")].filter((p) => !p.includes("(app)")).map((p) => p.replaceAll("\\", "/")).sort();
-    assert.deepEqual(outside, ["src/app/admin/login/page.tsx", "src/app/admin/page.tsx"]);
+    assert.deepEqual(outside, ["src/app/admin/login/page.tsx", "src/app/admin/mfa/page.tsx", "src/app/admin/page.tsx", "src/app/admin/security/page.tsx", "src/app/admin/set-password/page.tsx"]);
   });
 });
 
@@ -69,7 +97,7 @@ describe("proxy matcher", () => {
     const pattern = JSON.parse(literal!) as string;
     assert.ok(pattern.includes("\."), "the backslash before the dot must survive string parsing");
     const re = new RegExp(`^${pattern}$`);
-    for (const yes of ["/", "/projects", "/pl", "/pl/projects/rodomska", "/admin", "/admin/leads"]) assert.ok(re.test(yes), `${yes} must be handled`);
+    for (const yes of ["/", "/projects", "/pl", "/pl/projects/radomska", "/admin", "/admin/leads"]) assert.ok(re.test(yes), `${yes} must be handled`);
     for (const no of ["/api/leads", "/_next/static/a.js", "/favicon.ico", "/icon.svg"]) assert.ok(!re.test(no), `${no} must be skipped`);
   });
 });

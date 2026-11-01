@@ -2,7 +2,7 @@
 // RLS decides what comes back; nothing here widens access. Every function reports failure instead
 // of throwing so pages can show an error state.
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { LEAD_STATUSES, PAGE_SIZE, searchWords, type LeadFilters, type LeadStatus } from "./schema.ts";
+import { LEAD_STATUSES, PAGE_SIZE, searchWords, todayWarsaw, type LeadFilters, type LeadStatus } from "./schema.ts";
 
 export type LeadListItem = {
   id: string;
@@ -16,6 +16,9 @@ export type LeadListItem = {
   created_at: string;
   archived_at: string | null;
   projects: { name: string } | null;
+  /** Follow-up planning (migration 20261101090000). Absent/null while the columns do not exist yet. */
+  follow_up_on?: string | null;
+  next_action?: string | null;
 };
 
 export type LeadDetail = LeadListItem & {
@@ -50,6 +53,7 @@ export type Result<T> = { ok: true; data: T } | { ok: false };
 type Filterable = {
   eq(column: string, value: string): Filterable;
   is(column: string, value: null): Filterable;
+  lte(column: string, value: string): Filterable;
   or(filters: string): Filterable;
 };
 
@@ -60,6 +64,7 @@ function applyFilters<T>(query: T, f: LeadFilters, opts: { skipStatus?: boolean 
   if (f.source) q = q.eq("source", f.source);
   if (f.assigned === "none") q = q.is("assigned_to", null);
   else if (f.assigned) q = q.eq("assigned_to", f.assigned);
+  if (f.followUp === "due") q = q.lte("follow_up_on", todayWarsaw());
   if (!f.includeArchived) q = q.is("archived_at", null);
   // One .or() per word, so "jan kow" requires both words (AND) and each word may match any column.
   // Words contain only letters, digits and "@ . + - _" (see sanitizeSearch), so they cannot inject filters.
@@ -69,14 +74,18 @@ function applyFilters<T>(query: T, f: LeadFilters, opts: { skipStatus?: boolean 
   return q as unknown as T;
 }
 
-const LIST_COLUMNS = "id, first_name, last_name, phone, email, status, source, assigned_to, created_at, archived_at, projects(name)";
+const BASE_COLUMNS = "id, first_name, last_name, phone, email, status, source, assigned_to, created_at, archived_at, projects(name)";
+const LIST_COLUMNS = `${BASE_COLUMNS}, follow_up_on, next_action`;
+/** Postgres "undefined_column": the follow-up migration has not been applied to this database yet. */
+const missingColumn = (e: { code?: string } | null) => e?.code === "42703" || e?.code === "PGRST204";
 
 export async function listLeads(db: SupabaseClient, f: LeadFilters): Promise<Result<{ rows: LeadListItem[]; total: number }>> {
   const from = (f.page - 1) * PAGE_SIZE;
-  const query = applyFilters(db.from("leads").select(LIST_COLUMNS, { count: "exact" }), f)
-    .order("created_at", { ascending: false })
-    .range(from, from + PAGE_SIZE - 1);
-  const { data, count, error } = await query;
+  const run = (cols: string, ff: LeadFilters) =>
+    applyFilters(db.from("leads").select(cols, { count: "exact" }), ff).order("created_at", { ascending: false }).range(from, from + PAGE_SIZE - 1);
+  let { data, count, error } = await run(LIST_COLUMNS, f);
+  // Migration not applied yet: show the list without follow-up data (and ignore the follow-up filter).
+  if (error && missingColumn(error)) ({ data, count, error } = await run(BASE_COLUMNS, { ...f, followUp: undefined }));
   if (error) return { ok: false };
   return { ok: true, data: { rows: (data ?? []) as unknown as LeadListItem[], total: count ?? 0 } };
 }
@@ -91,13 +100,31 @@ export async function statusCounts(db: SupabaseClient, f: LeadFilters): Promise<
 }
 
 export async function getLead(db: SupabaseClient, id: string): Promise<Result<LeadDetail | null>> {
-  const { data, error } = await db
-    .from("leads")
-    .select(`${LIST_COLUMNS}, message, locale, project_id, created_by, utm_source, utm_medium, utm_campaign, landing_path, referrer, privacy_notice_version, updated_at`)
-    .eq("id", id)
-    .maybeSingle();
+  const extra = "message, locale, project_id, created_by, utm_source, utm_medium, utm_campaign, landing_path, referrer, privacy_notice_version, updated_at";
+  const run = (list: string) => db.from("leads").select(`${list}, ${extra}`).eq("id", id).maybeSingle();
+  let { data, error } = await run(LIST_COLUMNS);
+  if (error && missingColumn(error)) ({ data, error } = await run(BASE_COLUMNS)); // follow-up migration not applied yet
   if (error) return { ok: false };
   return { ok: true, data: (data as unknown as LeadDetail | null) ?? null };
+}
+
+export type LatestContact = { type: Exclude<Activity["type"], "status_change">; occurred_at: string };
+
+/** The most recent real contact (note, call, e-mail, meeting) per lead, for the leads on the current page only. */
+export async function latestContacts(db: SupabaseClient, leadIds: string[]): Promise<Map<string, LatestContact>> {
+  const out = new Map<string, LatestContact>();
+  if (leadIds.length === 0) return out;
+  const { data } = await db
+    .from("lead_activities")
+    .select("lead_id, type, occurred_at")
+    .in("lead_id", leadIds)
+    .in("type", ["note", "call", "email", "meeting"])
+    .order("occurred_at", { ascending: false })
+    .limit(500);
+  for (const r of (data ?? []) as { lead_id: string; type: LatestContact["type"]; occurred_at: string }[]) {
+    if (!out.has(r.lead_id)) out.set(r.lead_id, { type: r.type, occurred_at: r.occurred_at });
+  }
+  return out;
 }
 
 export async function listActivities(db: SupabaseClient, leadId: string): Promise<Result<Activity[]>> {

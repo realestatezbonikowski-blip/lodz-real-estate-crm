@@ -54,6 +54,7 @@ for (const [name, value] of Object.entries(env)) {
 console.log(env.SUPABASE_SECRET_KEY ? "• SUPABASE_SECRET_KEY is set (server-only; not needed until lead intake)" : "• SUPABASE_SECRET_KEY not set (fine until lead intake)");
 
 // Lead intake: exactly one server credential, never both (docs/lead-intake-credential.md).
+console.log(env.SUPABASE_TEAM_ADMIN_KEY ? "• SUPABASE_TEAM_ADMIN_KEY is set (server-only; enables team invitations)" : "• SUPABASE_TEAM_ADMIN_KEY not set (team invitations stay disabled; everything else works)");
 if (env.SUPABASE_SECRET_KEY && env.LEAD_INTAKE_DATABASE_URL) bad("Both SUPABASE_SECRET_KEY and LEAD_INTAKE_DATABASE_URL are set. Configure exactly one; there is no fallback");
 else if (!env.LEAD_INTAKE_DATABASE_URL) console.log("• LEAD_INTAKE_DATABASE_URL not set (Option B not configured; enquiries are refused with 503)");
 else {
@@ -71,6 +72,11 @@ else {
     if (u.port === "6543" || u.port === "5432") ok(`LEAD_INTAKE_DATABASE_URL port is ${u.port}`); else bad("LEAD_INTAKE_DATABASE_URL port should be 6543 (transaction mode) or 5432");
   }
 }
+
+// Rate limiting: which header (if any) carries the real client address from the host's trusted proxy.
+if (!env.TRUSTED_PROXY_HEADER) console.log("• TRUSTED_PROXY_HEADER not set (no per-client rate limit; the per-account login limit still applies)");
+else if (/^[a-z0-9-]{1,64}$/i.test(env.TRUSTED_PROXY_HEADER)) ok("TRUSTED_PROXY_HEADER is set (make sure your host overwrites this header; a client-controlled header defeats rate limiting)");
+else bad("TRUSTED_PROXY_HEADER is not a valid header name");
 
 // Turnstile: the site key is public, the secret must not be.
 console.log(env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? "• NEXT_PUBLIC_TURNSTILE_SITE_KEY is set" : "• NEXT_PUBLIC_TURNSTILE_SITE_KEY not set (the enquiry form stays disabled)");

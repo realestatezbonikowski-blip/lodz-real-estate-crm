@@ -7,10 +7,12 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { createRateLimiter } from "@/lib/security/rate-limit";
+import { trustedClientKey } from "@/lib/security/client-ip";
+import { createLoginGuard } from "@/lib/security/login-guard";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireOwner, requireStaff } from "./auth";
-import { activitySchema, assignSchema, contactSchema, fieldErrors, manualLeadSchema, statusSchema, type ActionResult } from "./schema";
+import { attemptLogin, classifyAuthError } from "./login";
+import { activitySchema, assignSchema, contactSchema, fieldErrors, followUpSchema, manualLeadSchema, statusSchema, type ActionResult } from "./schema";
 
 const NO_RIGHTS: ActionResult = { ok: false, message: "Nie udało się zapisać zmiany. Brak uprawnień lub lead już nie istnieje." };
 const FAILED: ActionResult = { ok: false, message: "Nie udało się zapisać zmiany. Spróbuj ponownie." };
@@ -18,21 +20,29 @@ const idSchema = z.string().uuid();
 
 const text = (fd: FormData, k: string) => String(fd.get(k) ?? "");
 
-// Best-effort brute-force brake in front of Supabase Auth's own limits (per server instance).
-const loginLimiter = createRateLimiter({ windowMs: 10 * 60_000, max: 10, maxKeys: 2000 });
+// Brute-force guard (per server process; see src/lib/security/login-guard.ts for what it does and
+// what it cannot do across instances). Not exported: a "use server" module exports actions only.
+const loginGuard = createLoginGuard();
 
 export async function signIn(formData: FormData): Promise<void> {
-  const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  if (!loginLimiter.check(ip).allowed) redirect("/admin/login?error=rate");
+  // A client address is used only if the deployment declares which header its trusted proxy sets
+  // (TRUSTED_PROXY_HEADER). Otherwise there is no per-client key and only the per-account limit applies.
+  const clientKey = trustedClientKey(await headers(), process.env);
 
-  const parsed = z.object({ email: z.string().trim().toLowerCase().email().max(254), password: z.string().min(1).max(200) })
-    .safeParse({ email: text(formData, "email"), password: text(formData, "password") });
-  if (!parsed.success) redirect("/admin/login?error=invalid");
+  const outcome = await attemptLogin(
+    {
+      guard: loginGuard,
+      authenticate: async (email, password) => {
+        const supabase = await createSupabaseServerClient();
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        return classifyAuthError(error);
+      },
+    },
+    { email: text(formData, "email"), password: text(formData, "password"), clientKey },
+  );
 
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
-  // One generic message for every failure: no hint whether the account exists.
-  if (error) redirect("/admin/login?error=invalid");
+  // One generic message for every credential failure: no hint whether the account exists.
+  if (outcome !== "ok") redirect(`/admin/login?error=${outcome}`);
   redirect("/admin/leads");
 }
 
@@ -66,6 +76,26 @@ export async function assignLead(leadId: string, _prev: ActionResult, formData: 
   if (!data?.length) return NO_RIGHTS;
   revalidatePath(`/admin/leads/${leadId}`);
   return { ok: true, message: "Przypisanie zapisane." };
+}
+
+export async function setFollowUp(leadId: string, _prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const { supabase } = await requireStaff();
+  if (!idSchema.safeParse(leadId).success) return FAILED;
+  const parsed = followUpSchema.safeParse({ followUpOn: text(formData, "followUpOn"), nextAction: text(formData, "nextAction") });
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Sprawdź formularz.", fields: fieldErrors(parsed.error) };
+
+  const { data, error } = await supabase
+    .from("leads")
+    .update({ follow_up_on: parsed.data.followUpOn, next_action: parsed.data.nextAction })
+    .eq("id", leadId)
+    .select("id");
+  // 42703 = the follow-up migration has not been applied to this database yet.
+  if (error?.code === "42703" || error?.code === "PGRST204") return { ok: false, message: "Planowanie kontaktu będzie dostępne po zastosowaniu migracji bazy danych (zob. docs/overnight/TEAM-WORKFLOW.md)." };
+  if (error) return FAILED;
+  if (!data?.length) return NO_RIGHTS;
+  revalidatePath(`/admin/leads/${leadId}`);
+  revalidatePath("/admin/leads");
+  return { ok: true, message: parsed.data.followUpOn ? "Termin kontaktu zapisany." : "Termin kontaktu usunięty." };
 }
 
 export async function addActivity(leadId: string, _prev: ActionResult, formData: FormData): Promise<ActionResult> {

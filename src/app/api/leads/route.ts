@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import { PRIVACY_NOTICE_VERSION, resolveIntakeMode } from "@/features/leads/config";
 import { handleLeadSubmission, type LeadSubmitter } from "@/features/leads/handler";
 import { createLeadSubmitter, createPostgresRunner } from "@/features/leads/server/postgres-submitter";
+import { trustedClientKey } from "@/lib/security/client-ip";
 import { createRateLimiter } from "@/lib/security/rate-limit";
 import { createTurnstileVerifier } from "@/lib/security/turnstile";
 
@@ -32,8 +33,9 @@ function allowedOrigin(): string | null {
 }
 
 export async function POST(request: Request) {
-  // Hosting-dependent: only trust x-forwarded-for if the host's proxy sets it. Used in memory only.
-  const clientKey = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  // Only a header the deployment declares as set by its trusted proxy is used (TRUSTED_PROXY_HEADER);
+  // without one there is no per-client key and the database limits plus Turnstile still apply.
+  const clientKey = trustedClientKey(request.headers, process.env);
 
   const result = await handleLeadSubmission(
     {

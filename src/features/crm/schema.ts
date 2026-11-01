@@ -21,6 +21,8 @@ export type LeadFilters = {
   source?: (typeof SOURCES)[number];
   /** A staff id, or "none" for unassigned. */
   assigned?: string;
+  /** "due" = follow-up date is today or earlier. */
+  followUp?: "due";
   includeArchived: boolean;
   page: number;
 };
@@ -60,15 +62,16 @@ export function parseFilters(sp: Record<string, string | string[] | undefined>):
     project: project.success ? project.data : undefined,
     source: source.success ? source.data : undefined,
     assigned: assigned.success ? assigned.data : undefined,
+    followUp: one(sp.followup) === "due" ? "due" : undefined,
     includeArchived: one(sp.archived) === "1",
     page: page.success ? page.data : 1,
   };
 }
 
 /** Builds a list URL that keeps the active filters and overrides the given keys. */
-export function listHref(f: LeadFilters, over: Partial<Record<"q" | "status" | "project" | "source" | "assigned" | "archived" | "page", string | undefined>> = {}): string {
+export function listHref(f: LeadFilters, over: Partial<Record<"q" | "status" | "project" | "source" | "assigned" | "followup" | "archived" | "page", string | undefined>> = {}): string {
   const base: Record<string, string | undefined> = {
-    q: f.q, status: f.status, project: f.project, source: f.source, assigned: f.assigned,
+    q: f.q, status: f.status, project: f.project, source: f.source, assigned: f.assigned, followup: f.followUp,
     archived: f.includeArchived ? "1" : undefined,
     page: f.page > 1 ? String(f.page) : undefined,
   };
@@ -107,3 +110,52 @@ export type ActionResult = { ok: true; message: string } | { ok: false; message:
 export function fieldErrors(error: z.ZodError): string[] {
   return [...new Set(error.issues.map((i) => String(i.path[0] ?? "")))].filter(Boolean);
 }
+
+// ---- Follow-up and team (opiekunowie) ----------------------------------------------------------
+
+/** Today's date (YYYY-MM-DD) in the CRM's time zone. */
+export function todayWarsaw(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Warsaw", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+}
+
+const isRealDate = (s: string) => {
+  const d = new Date(`${s}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+};
+
+/** Empty = clear the follow-up. A date must be a real calendar day. */
+export const followUpSchema = z.strictObject({
+  followUpOn: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || (/^\d{4}-\d{2}-\d{2}$/.test(v) && isRealDate(v)), "Podaj poprawną datę.")
+    .transform((v) => (v === "" ? null : v)),
+  nextAction: z
+    .string()
+    .trim()
+    .max(200, "Następny krok może mieć najwyżej 200 znaków.")
+    .refine((v) => !/[\u0000-\u001f\u007f]/.test(v), "Tekst zawiera niedozwolone znaki.")
+    .transform((v) => (v === "" ? null : v)),
+});
+
+export type FollowUpState = "overdue" | "today" | "upcoming" | null;
+export function followUpState(date: string | null | undefined, today: string): FollowUpState {
+  if (!date) return null;
+  return date < today ? "overdue" : date === today ? "today" : "upcoming";
+}
+
+/** New team member: a real e-mail and a display name. Role is NOT an input (always the least-privileged "assistant"). */
+export const inviteSchema = z.strictObject({
+  email: z.string().trim().toLowerCase().max(254).email("Podaj poprawny adres e-mail."),
+  fullName: z
+    .string()
+    .trim()
+    .min(1, "Podaj imię i nazwisko.")
+    .max(120, "Imię i nazwisko jest za długie.")
+    .refine((v) => !/[\u0000-\u001f\u007f]/.test(v), "Tekst zawiera niedozwolone znaki."),
+});
+export const activeSchema = z.strictObject({ userId: z.string().uuid(), active: z.enum(["true", "false"]).transform((v) => v === "true") });
+export const passwordSchema = z.strictObject({
+  password: z.string().min(12, "Hasło musi mieć co najmniej 12 znaków.").max(72, "Hasło może mieć najwyżej 72 znaki."),
+  confirm: z.string(),
+}).refine((v) => v.password === v.confirm, { message: "Hasła nie są takie same.", path: ["confirm"] });

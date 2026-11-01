@@ -53,7 +53,7 @@ export function IsoLocation({ label, building, context }: { label: string; build
         </g>
         <line x1={lx} y1={ly} x2={lx} y2={ly - 70} stroke="var(--accent)" strokeWidth="1.5" />
         <circle cx={lx} cy={ly - 70} r="4" fill="var(--accent)" />
-        <text x={lx + 12} y={ly - 66} fontSize="17" fill="var(--ink)" fontFamily="var(--font-inter), sans-serif" fontWeight="500">{building}</text>
+        <text x={lx + 12} y={ly - 66} fontSize="22" fill="var(--ink)" fontFamily="var(--font-inter), sans-serif" fontWeight="500">{building}</text>
       </svg>
       <figcaption className="mt-3 flex items-center gap-2 text-[0.8125rem] text-muted">
         <i aria-hidden="true" className="block h-2.5 w-2.5 border border-accent bg-ink" /> {building}

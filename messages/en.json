@@ -22,7 +22,7 @@
     "legalTitle": "Legal",
     "privacy": "Privacy policy",
     "legalPlaceholder": "[Other legal information – awaiting approval]",
-    "draftNote": "This site is being prepared. The content is a draft."
+    "draftNote": "Concept presentation. Visualisations, sample data and financing terms are indicative, subject to the developer’s confirmation, and are not an offer."
   },
   "Placeholder": {
     "badge": "Content to be added"
@@ -30,7 +30,7 @@
   "Home": {
     "eyebrow": "Łódź",
     "heading": "New apartments in Łódź",
-    "lead": "The Rodomska development. This site is being prepared, and more information will appear once it has been approved.",
+    "lead": "The Radomska development. This site is being prepared, and more information will appear once it has been approved.",
     "ctaProject": "Explore the development",
     "ctaContact": "Leave your details",
     "visualLabel": "Abstract illustration of an architectural composition",
@@ -59,7 +59,7 @@
       "completed": "Completed"
     },
     "items": {
-      "rodomska": {
+      "radomska": {
         "name": "Radomska 5",
         "summary": "[Description of the development – to be added once approved data has been provided.]"
       }

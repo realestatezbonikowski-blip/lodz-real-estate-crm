@@ -23,7 +23,7 @@ export type ProjectFact = {
 
 export type ProjectMedia = {
   kind: MediaKind;
-  /** Path under /public, e.g. "/projects/rodomska/render-1.webp". Absent = placeholder card. */
+  /** Path under /public, e.g. "/projects/radomska/render-1.webp". Absent = placeholder card. */
   src?: string;
   width?: number;
   height?: number;
@@ -42,9 +42,9 @@ export type ProjectEntry = {
 
 export const projects: readonly ProjectEntry[] = [
   {
-    // "Rodomska" is the working name given for the Łódź development. The status, counts, dates and
+    // "Radomska" is the working name given for the Łódź development. The status, counts, dates and
     // prices below are NOT confirmed and are therefore left empty.
-    slug: "rodomska",
+    slug: "radomska",
     status: "planning",
     provisional: true,
     facts: [

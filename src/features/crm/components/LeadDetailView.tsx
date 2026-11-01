@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { Message } from "@/components/Message";
 import { ACTIVITY_LABELS, dateTime, LOCALE_LABELS, SOURCE_LABELS, STATUS_LABELS } from "../labels";
 import type { Activity, LeadDetail, StaffMember } from "../queries";
-import { ActivityForm, ArchiveButton, AssignForm, ContactForm, DeleteForm, StatusForm } from "./forms";
+import { followUpState, todayWarsaw } from "../schema";
+import { ActivityForm, ArchiveButton, AssignForm, ContactForm, DeleteForm, FollowUpForm, StatusForm } from "./forms";
 import { StatusBadge } from "./StatusBadge";
 
 type Props = {
@@ -40,6 +42,18 @@ export function LeadDetailView({ lead, activities, staff, isOwner, notice }: Pro
         <ArchiveButton leadId={lead.id} archived={Boolean(lead.archived_at)} />
       </div>
 
+      <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-2 text-sm">
+        <div><dt className="text-muted">Opiekun</dt><dd className="font-medium">{lead.assigned_to ? (staffName.get(lead.assigned_to) ?? "—") : <span className="text-warning">Nieprzypisany</span>}</dd></div>
+        {lead.follow_up_on && (
+          <div>
+            <dt className="text-muted">Następny kontakt</dt>
+            <dd className={`font-medium ${followUpState(lead.follow_up_on, todayWarsaw()) === "overdue" ? "text-danger" : ""}`}>
+              {lead.follow_up_on}{followUpState(lead.follow_up_on, todayWarsaw()) === "overdue" && " (zaległy)"}{lead.next_action ? ` · ${lead.next_action}` : ""}
+            </dd>
+          </div>
+        )}
+      </dl>
+
       {notice && <p role="status" className="mt-4 border border-border bg-paper-deep p-3 text-sm">{notice}</p>}
 
       <div className="mt-8 grid gap-10 lg:grid-cols-12">
@@ -67,6 +81,7 @@ export function LeadDetailView({ lead, activities, staff, isOwner, notice }: Pro
             <h2 id="manage" className="eyebrow">Obsługa</h2>
             <StatusForm leadId={lead.id} status={lead.status} />
             <AssignForm leadId={lead.id} assignedTo={lead.assigned_to} staff={staff} />
+            <FollowUpForm leadId={lead.id} followUpOn={lead.follow_up_on ?? null} nextAction={lead.next_action ?? null} />
           </section>
 
           <section aria-labelledby="origin" className="card p-5">
@@ -82,7 +97,7 @@ export function LeadDetailView({ lead, activities, staff, isOwner, notice }: Pro
 
           {isOwner && (
             <details className="card p-5">
-              <summary className="cursor-pointer text-sm text-accent">Usuń lead (tylko właściciel)</summary>
+              <summary className="cursor-pointer text-sm text-danger">Usuń lead (tylko właściciel)</summary>
               <div className="mt-4"><DeleteForm leadId={lead.id} /></div>
             </details>
           )}
@@ -95,14 +110,14 @@ export function LeadDetailView({ lead, activities, staff, isOwner, notice }: Pro
           </div>
 
           {activities === null ? (
-            <p role="alert" className="mt-6 text-sm text-accent">Nie udało się wczytać historii. Odśwież stronę.</p>
+            <Message tone="error" className="mt-6">Nie udało się wczytać historii. Odśwież stronę.</Message>
           ) : activities.length === 0 ? (
             <p className="mt-6 text-muted">Brak wpisów. Dodaj pierwszą notatkę po rozmowie z klientem.</p>
           ) : (
             <ol className="mt-6 grid gap-0 border-l border-border">
               {activities.map((a) => (
                 <li key={a.id} className="relative pb-6 pl-6">
-                  <span aria-hidden="true" className={`absolute -left-[5px] top-1.5 h-2.5 w-2.5 ${a.type === "status_change" ? "bg-accent" : "bg-ink"}`} />
+                  <span aria-hidden="true" className={`absolute -left-[5px] top-1.5 h-2.5 w-2.5 ${a.type === "status_change" ? "bg-info" : "bg-ink"}`} />
                   <p className="text-sm text-muted">
                     <span className="font-medium text-ink">{ACTIVITY_LABELS[a.type]}</span>
                     {" · "}{a.actor_id ? (staffName.get(a.actor_id) ?? "Użytkownik usunięty") : "System"}

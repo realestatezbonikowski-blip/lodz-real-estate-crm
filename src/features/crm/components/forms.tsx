@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useTransition } from "react";
-import { addActivity, assignLead, createManualLead, deleteLead, setArchived, updateContact, updateLeadStatus } from "../actions";
+import { Message } from "@/components/Message";
+import { addActivity, assignLead, createManualLead, deleteLead, setArchived, setFollowUp, updateContact, updateLeadStatus } from "../actions";
 import { ACTIVITY_LABELS, STATUS_LABELS } from "../labels";
 import { ACTIVITY_TYPES, LEAD_STATUSES, type ActionResult, type LeadStatus } from "../schema";
 import type { ProjectOption, StaffMember } from "../queries";
@@ -10,9 +11,7 @@ import type { ProjectOption, StaffMember } from "../queries";
 export function Notice({ result }: { result: ActionResult }) {
   if (!result) return null;
   return (
-    <p role={result.ok ? "status" : "alert"} className={`text-sm ${result.ok ? "text-stone" : "text-accent"}`}>
-      {result.message}
-    </p>
+    <Message tone={result.ok ? "success" : "error"}>{result.message}</Message>
   );
 }
 
@@ -57,6 +56,29 @@ export function AssignForm({ leadId, assignedTo, staff }: { leadId: string; assi
           {staff.filter((s) => s.is_active || s.id === assignedTo).map((s) => <option key={s.id} value={s.id}>{s.full_name}</option>)}
         </select>
         <button className="btn btn-ghost" disabled={pending}>{pending ? "Zapisywanie…" : "Zapisz opiekuna"}</button>
+      </div>
+      <Notice result={result} />
+    </form>
+  );
+}
+
+export function FollowUpForm({ leadId, followUpOn, nextAction }: { leadId: string; followUpOn: string | null; nextAction: string | null }) {
+  const [result, action, pending] = useActionState(setFollowUp.bind(null, leadId), null);
+  return (
+    <form action={action} className="grid gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label htmlFor="followUpOn" className="mb-1 block text-sm">Następny kontakt (data)</label>
+          <input id="followUpOn" name="followUpOn" type="date" defaultValue={followUpOn ?? ""} className="field" aria-invalid={result && !result.ok && result.fields?.includes("followUpOn") ? true : undefined} />
+        </div>
+        <div>
+          <label htmlFor="nextAction" className="mb-1 block text-sm">Następny krok</label>
+          <input id="nextAction" name="nextAction" maxLength={200} defaultValue={nextAction ?? ""} placeholder="np. oddzwonić po 16:00" className="field" />
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <button className="btn btn-ghost" disabled={pending}>{pending ? "Zapisywanie…" : "Zapisz termin"}</button>
+        <span className="text-sm text-muted">Puste pola usuwają termin.</span>
       </div>
       <Notice result={result} />
     </form>
@@ -115,11 +137,11 @@ export function DeleteForm({ leadId }: { leadId: string }) {
   return (
     <form action={action} className="grid gap-3">
       <p className="text-sm text-muted">Usunięcie jest nieodwracalne i obejmuje historię kontaktu tego leada. Zdarzenie zostanie zapisane w dzienniku (bez danych osobowych).</p>
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" name="confirm" className="h-5 w-5" /> Potwierdzam usunięcie tego leada
+      <label className="flex min-h-11 items-center gap-2 text-sm">
+        <input type="checkbox" name="confirm" className="check" /> Potwierdzam usunięcie tego leada
       </label>
       <div className="flex flex-wrap items-center gap-3">
-        <button className="btn border-accent text-accent" disabled={pending}>{pending ? "Usuwanie…" : "Usuń lead"}</button>
+        <button className="btn btn-danger" disabled={pending}>{pending ? "Usuwanie…" : "Usuń lead"}</button>
         <Notice result={result} />
       </div>
     </form>

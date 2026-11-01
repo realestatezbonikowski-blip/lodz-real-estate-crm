@@ -28,17 +28,17 @@ export function ApartmentExplorer({ apartments, floors, locale, labels }: { apar
 
   return (
     <div className="grid gap-10 lg:grid-cols-12">
-      <div className="lg:col-span-3">
+      <div className="min-w-0 lg:col-span-3">
         <div className="lg:sticky lg:top-24">
           <h3 className="eyebrow">{labels.levels}</h3>
-          <div role="group" aria-label={labels.levels} className="mt-4 grid gap-1">
+          <div role="group" aria-label={labels.levels} className="mt-4 flex gap-1 overflow-x-auto pb-1 lg:grid lg:overflow-visible">
             {[0, ...[...floors].reverse()].map((f) => (
               <button
                 key={f}
                 type="button"
                 aria-pressed={floor === f}
                 onClick={() => setFloor(f)}
-                className="level-btn flex min-h-11 items-center gap-3 px-2 text-left text-sm"
+                className="level-btn flex min-h-11 shrink-0 items-center gap-3 whitespace-nowrap px-2 pr-3 text-left text-sm"
               >
                 {f === 0 ? <Slab on={floor === 0} /> : <Slab on={floor === f} />}
                 <span className="font-medium">{f === 0 ? labels.all : `${labels.level} ${f}`}</span>
@@ -64,7 +64,7 @@ export function ApartmentExplorer({ apartments, floors, locale, labels }: { apar
         </div>
       </div>
 
-      <div className="lg:col-span-9">
+      <div className="min-w-0 lg:col-span-9">
         <p className="mb-5 text-sm text-muted" role="status" aria-live="polite">
           {labels.showing.replace("{shown}", String(shown.length)).replace("{total}", String(apartments.length))}
         </p>

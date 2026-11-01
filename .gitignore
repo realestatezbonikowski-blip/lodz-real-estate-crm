@@ -18,3 +18,7 @@ npm-debug.log*
 # supabase local
 /supabase/.temp
 /supabase/.branches
+
+# local tooling and source assets (not part of the app)
+/.claude/
+/consept/

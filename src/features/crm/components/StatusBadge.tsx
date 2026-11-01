@@ -1,17 +1,25 @@
+import { CalendarCheck, CircleCheck, CircleDot, CircleX, PhoneCall, PhoneOff, Star, type LucideIcon } from "lucide-react";
 import { STATUS_LABELS } from "../labels";
 import type { LeadStatus } from "../schema";
 
-// Colour is never the only signal: the label is always printed.
-const TONE: Record<LeadStatus, string> = {
-  new: "bg-accent text-white border-accent",
-  contacted: "bg-paper-deep border-border",
-  interested: "bg-paper-deep border-ink",
-  meeting: "bg-ink text-paper border-ink",
-  converted: "bg-stone text-paper border-stone",
-  not_interested: "border-border text-muted",
-  unreachable: "border-border text-muted",
+// Colour is never the only signal: every status has its own icon and always prints its label.
+// "New" is informational (not the brand terracotta); only a booked meeting gets the solid treatment.
+const STATUS: Record<LeadStatus, { tone: string; Icon: LucideIcon }> = {
+  new: { tone: "tone-info", Icon: CircleDot },
+  contacted: { tone: "tone-neutral", Icon: PhoneCall },
+  interested: { tone: "tone-warning", Icon: Star },
+  meeting: { tone: "tone-info badge-solid", Icon: CalendarCheck },
+  converted: { tone: "tone-success", Icon: CircleCheck },
+  not_interested: { tone: "tone-neutral", Icon: CircleX },
+  unreachable: { tone: "tone-neutral", Icon: PhoneOff },
 };
 
 export function StatusBadge({ status }: { status: LeadStatus }) {
-  return <span className={`inline-block border px-2 py-0.5 text-xs font-medium ${TONE[status]}`}>{STATUS_LABELS[status]}</span>;
+  const { tone, Icon } = STATUS[status];
+  return (
+    <span className={`badge ${tone}`}>
+      <Icon size={14} strokeWidth={2} aria-hidden="true" />
+      {STATUS_LABELS[status]}
+    </span>
+  );
 }

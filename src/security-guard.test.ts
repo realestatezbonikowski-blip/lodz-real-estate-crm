@@ -4,7 +4,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 
-const FORBIDDEN = /SUPABASE_SECRET_KEY|SERVICE_ROLE|LEAD_INTAKE_DATABASE_URL|TURNSTILE_SECRET_KEY|sb_secret_/i;
+const FORBIDDEN = /SUPABASE_SECRET_KEY|SUPABASE_TEAM_ADMIN_KEY|SERVICE_ROLE|LEAD_INTAKE_DATABASE_URL|TURNSTILE_SECRET_KEY|sb_secret_/i;
 const SERVER_ONLY_MODULES = /lib\/security\/turnstile|features\/leads\/handler|features\/leads\/config/;
 
 function* files(dir: string): Generator<string> {

@@ -38,7 +38,10 @@ function setup(over: Partial<Deps> = {}, outcome: SubmitOutcome | Error = "creat
   };
   const send = (body: unknown, origin: string | null = ORIGIN, key = "k") =>
     handleLeadSubmission(deps, { origin, clientKey: key, bodyText: typeof body === "string" ? body : JSON.stringify(body) });
-  return { calls, events, send };
+  // No trusted client address known (TRUSTED_PROXY_HEADER unset): the request carries no clientKey.
+  const sendWithoutClientKey = (body: unknown) =>
+    handleLeadSubmission(deps, { origin: ORIGIN, bodyText: JSON.stringify(body) });
+  return { calls, events, send, sendWithoutClientKey };
 }
 
 describe("lead pipeline", () => {
@@ -139,6 +142,12 @@ describe("lead pipeline", () => {
     assert.equal(third.status, 429);
     assert.ok((third.retryAfterSec ?? 0) >= 1);
     assert.equal((await send(valid, ORIGIN, "other")).status, 200); // other clients unaffected
+  });
+
+  test("with no trusted client address the per-client limit is skipped: there is no shared bucket anyone could exhaust", async () => {
+    const { sendWithoutClientKey, calls } = setup({ limiter: createRateLimiter({ windowMs: 60_000, max: 1, maxKeys: 10 }) });
+    for (let i = 0; i < 10; i++) assert.equal((await sendWithoutClientKey(valid)).status, 200);
+    assert.equal(calls.length, 10);
   });
 });
 

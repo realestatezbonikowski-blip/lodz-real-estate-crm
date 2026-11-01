@@ -1,0 +1,35 @@
+# Render Blueprint for a free CLIENT DEMO of the Next.js app (one Web Service).
+# Supabase stays the backend (it is NOT replaced). All values marked `sync: false` are entered in the
+# Render dashboard by hand: never commit them. See docs/overnight/RENDER.md for the full checklist.
+services:
+  - type: web
+    name: radomska-crm-demo
+    runtime: node
+    plan: free
+    # Create the service from a GitHub repo you own (there is no git remote configured yet).
+    buildCommand: npm ci && npm run build
+    # Bind to all interfaces on the port Render provides.
+    startCommand: npx next start -H 0.0.0.0 -p $PORT
+    healthCheckPath: /pl
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # --- public (inlined into the browser bundle at BUILD time: set them before the first deploy)
+      - key: NEXT_PUBLIC_SITE_URL
+        sync: false # https://<your-service>.onrender.com
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        sync: false # the sb_publishable_... key ONLY
+      - key: NEXT_PUBLIC_TURNSTILE_SITE_KEY
+        sync: false
+      # --- server-only secrets
+      - key: TURNSTILE_SECRET_KEY
+        sync: false
+      - key: LEAD_INTAKE_DATABASE_URL
+        sync: false # least-privilege lead_intake role (docs/lead-intake-credential.md)
+      - key: SUPABASE_TEAM_ADMIN_KEY
+        sync: false # OPTIONAL: enables team invitations (server-only secret key; see docs/overnight/TEAM-WORKFLOW.md)
+      # --- behaviour
+      - key: MFA_MODE
+        value: enrolled # off | enrolled | required (see docs/overnight/MFA.md)

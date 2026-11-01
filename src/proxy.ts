@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
+import { authCookieOptions, withAuthCookiePolicy } from "./lib/supabase/cookie-policy";
 
 const intl = createMiddleware(routing);
 
@@ -16,17 +17,19 @@ async function admin(request: NextRequest) {
   let response = NextResponse.next({ request });
   if (url && key && !key.startsWith("sb_secret_")) {
     const supabase = createServerClient(url, key, {
+      cookieOptions: authCookieOptions(),
       cookies: {
         getAll: () => request.cookies.getAll(),
         setAll: (list) => {
           for (const { name, value } of list) request.cookies.set(name, value);
           response = NextResponse.next({ request });
-          for (const { name, value, options } of list) response.cookies.set(name, value, options);
+          for (const { name, value, options } of list) response.cookies.set(name, value, withAuthCookiePolicy(options));
         },
       },
     });
     const { data } = await supabase.auth.getUser(); // validates the token with the Auth server
-    if (!data.user && pathname !== "/admin/login") {
+    // /admin/auth/* is the invitation landing point: its one-time token IS the credential there.
+    if (!data.user && pathname !== "/admin/login" && !pathname.startsWith("/admin/auth/")) {
       const login = request.nextUrl.clone();
       login.pathname = "/admin/login";
       login.search = "";

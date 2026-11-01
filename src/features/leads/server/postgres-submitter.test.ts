@@ -5,8 +5,8 @@ import { createLeadSubmitter, IntakeError, type SqlRunner } from "./postgres-sub
 
 const params: SubmitLeadParams = {
   firstName: "Jan", lastName: "Kowalski", phone: "+48 570 123 456", email: "jan@example.com",
-  projectSlug: "rodomska", message: null, locale: "pl", utmSource: null, utmMedium: null,
-  utmCampaign: null, landingPath: "/pl/projects/rodomska", referrer: null, privacyNoticeVersion: "placeholder-0",
+  projectSlug: "radomska", message: null, locale: "pl", utmSource: null, utmMedium: null,
+  utmCampaign: null, landingPath: "/pl/projects/radomska", referrer: null, privacyNoticeVersion: "placeholder-0",
 };
 
 describe("Option B submitter", () => {
@@ -16,8 +16,8 @@ describe("Option B submitter", () => {
     assert.equal(await createLeadSubmitter(run).submit(params), "created");
     assert.match(seen!.text, /^select public\.submit_lead\(\$1,.*\$13\) as result$/);
     assert.deepEqual(seen!.args, [
-      "Jan", "Kowalski", "+48 570 123 456", "jan@example.com", "rodomska", null, "pl",
-      null, null, null, "/pl/projects/rodomska", null, "placeholder-0",
+      "Jan", "Kowalski", "+48 570 123 456", "jan@example.com", "radomska", null, "pl",
+      null, null, null, "/pl/projects/radomska", null, "placeholder-0",
     ]);
   });
 

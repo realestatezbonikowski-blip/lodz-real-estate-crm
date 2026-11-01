@@ -25,11 +25,11 @@ describe("search sanitising (PostgREST filter injection)", () => {
 describe("filter parsing", () => {
   test("accepts valid values", () => {
     const f = parseFilters({ status: "new", project: UUID, source: "manual", assigned: "none", archived: "1", page: "3", q: "kow" });
-    assert.deepEqual(f, { q: "kow", status: "new", project: UUID, source: "manual", assigned: "none", includeArchived: true, page: 3 });
+    assert.deepEqual(f, { q: "kow", status: "new", project: UUID, source: "manual", assigned: "none", followUp: undefined, includeArchived: true, page: 3 });
   });
   test("ignores invalid values instead of failing", () => {
     const f = parseFilters({ status: "hacked", project: "1 or 1=1", source: "x", assigned: "me", page: "-5", archived: "yes" });
-    assert.deepEqual(f, { q: undefined, status: undefined, project: undefined, source: undefined, assigned: undefined, includeArchived: false, page: 1 });
+    assert.deepEqual(f, { q: undefined, status: undefined, project: undefined, source: undefined, assigned: undefined, followUp: undefined, includeArchived: false, page: 1 });
   });
   test("array parameters use the first value", () => {
     assert.equal(parseFilters({ status: ["contacted", "new"] }).status, "contacted");
