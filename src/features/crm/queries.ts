@@ -90,8 +90,30 @@ export async function listLeads(db: SupabaseClient, f: LeadFilters): Promise<Res
   return { ok: true, data: { rows: (data ?? []) as unknown as LeadListItem[], total: count ?? 0 } };
 }
 
-/** Lead counts per status for the chips; the status filter itself is ignored so every chip shows its own total. */
+/** How many rows the one-request shortcut asks for. The server may return fewer: it has its own Max Rows setting. */
+export const COUNT_SCAN_LIMIT = 1000;
+
+/**
+ * Lead counts per status for the chips; the status filter itself is ignored so every chip shows its own total.
+ *
+ * Shortcut: ONE request reads the status column of the matching rows together with the exact total
+ * (`count: "exact"`, computed by the database for the same filters). The tally is used only when the rows
+ * received are exactly all of them (rows.length === total). If the response was cut short, whether by our
+ * limit or by a lower Max Rows setting on the project, or the total is missing, the exact per-status
+ * head counts are used instead (one request each). So the numbers are exact either way; the shortcut
+ * only saves six round trips while the data fits in one response.
+ */
 export async function statusCounts(db: SupabaseClient, f: LeadFilters): Promise<Result<Record<LeadStatus, number>>> {
+  const scan = await applyFilters(db.from("leads").select("status", { count: "exact" }), f, { skipStatus: true }).limit(COUNT_SCAN_LIMIT);
+  if (!scan.error && scan.data && typeof scan.count === "number" && scan.data.length === scan.count) {
+    const counts = Object.fromEntries(LEAD_STATUSES.map((s) => [s, 0])) as Record<LeadStatus, number>;
+    for (const row of scan.data as { status: string }[]) if (Object.hasOwn(counts, row.status)) counts[row.status as LeadStatus]++;
+    return { ok: true, data: counts };
+  }
+  return exactStatusCounts(db, f);
+}
+
+async function exactStatusCounts(db: SupabaseClient, f: LeadFilters): Promise<Result<Record<LeadStatus, number>>> {
   const results = await Promise.all(
     LEAD_STATUSES.map((s) => applyFilters(db.from("leads").select("id", { count: "exact", head: true }), f, { skipStatus: true }).eq("status", s)),
   );
