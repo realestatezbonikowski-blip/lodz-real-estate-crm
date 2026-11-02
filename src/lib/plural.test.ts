@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
-import { leadCount } from "../features/crm/labels.ts";
+import { createT } from "../features/admin-prefs/translate.ts";
 import { pluralPl } from "./plural.ts";
 
 const F = { one: "lead", few: "leady", many: "leadów" };
@@ -45,7 +45,8 @@ describe("pluralPl (Polish)", () => {
   });
 });
 
-describe("leadCount (what the CRM list shows)", () => {
+describe("lead counter (what the CRM list shows)", () => {
+  const leadCount = (n: number) => createT("pl").tn("leads.count", n);
   test("renders the number with the right form", () => {
     assert.deepEqual([1, 2, 5, 12, 22, 25].map(leadCount), ["1 lead", "2 leady", "5 leadów", "12 leadów", "22 leady", "25 leadów"]);
   });

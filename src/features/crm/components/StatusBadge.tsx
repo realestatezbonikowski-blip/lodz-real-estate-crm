@@ -1,5 +1,4 @@
 import { CalendarCheck, CircleCheck, CircleDot, CircleX, PhoneCall, PhoneOff, Star, type LucideIcon } from "lucide-react";
-import { STATUS_LABELS } from "../labels";
 import type { LeadStatus } from "../schema";
 
 // Colour is never the only signal: every status has its own icon and always prints its label.
@@ -14,12 +13,13 @@ const STATUS: Record<LeadStatus, { tone: string; Icon: LucideIcon }> = {
   unreachable: { tone: "tone-neutral", Icon: PhoneOff },
 };
 
-export function StatusBadge({ status }: { status: LeadStatus }) {
+/** `label` is the already-translated status name (see labels.ts), so this component stays language-free. */
+export function StatusBadge({ status, label }: { status: LeadStatus; label: string }) {
   const { tone, Icon } = STATUS[status];
   return (
     <span className={`badge ${tone}`}>
       <Icon size={14} strokeWidth={2} aria-hidden="true" />
-      {STATUS_LABELS[status]}
+      {label}
     </span>
   );
 }

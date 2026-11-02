@@ -1,43 +1,48 @@
 import Link from "next/link";
+import { SubmitButton } from "@/components/SubmitButton";
+import { AdminPrefs } from "@/features/admin-prefs/controls";
+import { getT } from "@/features/admin-prefs/server";
 import { signOut } from "@/features/crm/actions";
 import { requireStaff } from "@/features/crm/auth";
 import { CrmNav, SignOutIcon } from "@/features/crm/components/CrmNav";
-import { ROLE_LABELS } from "@/features/crm/labels";
+import { roleLabel } from "@/features/crm/labels";
 
 export const dynamic = "force-dynamic";
 
-const ITEMS = [
-  { href: "/admin/leads", label: "Leady", icon: "leads" },
-  { href: "/admin/leads/new", label: "Nowy lead", icon: "new" },
-  { href: "/admin/security", label: "Bezpieczeństwo", icon: "security" },
-  { href: "/admin/help", label: "Pomoc", icon: "help" },
-] as const;
-const TEAM_ITEM = { href: "/admin/team", label: "Zespół", icon: "team" } as const; // owners only
-
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { profile } = await requireStaff();
+  const { t } = await getT();
+
+  const leads = { href: "/admin/leads", label: t("nav.leads"), icon: "leads" } as const;
+  const create = { href: "/admin/leads/new", label: t("nav.new"), icon: "new" } as const;
+  const security = { href: "/admin/security", label: t("nav.security"), icon: "security" } as const;
+  const help = { href: "/admin/help", label: t("nav.help"), icon: "help" } as const;
+  const team = { href: "/admin/team", label: t("nav.team"), icon: "team" } as const; // owners only
 
   return (
     <>
       <a href="#content" className="absolute left-3 top-3 z-50 -translate-y-20 bg-ink px-4 py-3 text-paper focus:translate-y-0">
-        Przejdź do treści
+        {t("common.skip")}
       </a>
       <header className="crm-header">
-        <div className="wrap flex min-h-16 items-center justify-between gap-4">
-          <Link href="/admin/leads" className="crm-brand" aria-label="CRM, strona główna panelu">
+        <div className="wrap flex min-h-16 items-center justify-between gap-2 sm:gap-4">
+          <Link href="/admin/leads" className="crm-brand" aria-label={t("nav.home")}>
             <span aria-hidden="true" className="crm-mark" />
             <span className="display text-xl">CRM</span>
           </Link>
           <CrmNav
-            items={profile.role === "owner" ? [ITEMS[0], ITEMS[1], TEAM_ITEM, ITEMS[2], ITEMS[3]] : [...ITEMS]}
-            label="Panel"
-            menuOpen="Otwórz menu panelu"
-            menuClose="Zamknij menu panelu"
+            items={profile.role === "owner" ? [leads, create, team, security, help] : [leads, create, security, help]}
+            label={t("nav.panel")}
+            menuOpen={t("nav.menuOpen")}
+            menuClose={t("nav.menuClose")}
             userName={profile.full_name}
-            role={ROLE_LABELS[profile.role]}
+            role={roleLabel(t, profile.role)}
+            prefs={<AdminPrefs />}
             signOut={
               <form action={signOut}>
-                <button className="btn btn-ghost min-h-10 px-3 text-sm" aria-label="Wyloguj"><SignOutIcon /> Wyloguj</button>
+                <SubmitButton pendingLabel={t("common.working")} className="btn btn-ghost min-h-11 px-3 text-sm" aria-label={t("nav.signOut")}>
+                  <SignOutIcon /> {t("nav.signOut")}
+                </SubmitButton>
               </form>
             }
           />

@@ -1,7 +1,7 @@
 "use client";
 
 import { CircleHelp, LayoutList, LogOut, Menu, ShieldCheck, UserPlus, Users, X, type LucideIcon } from "lucide-react";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
@@ -15,13 +15,24 @@ function isActive(item: Item, path: string) {
 }
 
 /**
+ * Tells the person the tap was registered while the next page loads. It sits inside a <Link> and shows
+ * only if the navigation takes longer than ~150 ms (CSS delay), so fast navigations stay quiet. It is a
+ * small dot, not a movement-heavy animation.
+ */
+export function LinkPending() {
+  const { pending } = useLinkStatus();
+  return <span aria-hidden="true" className="link-pending" data-active={pending || undefined} />;
+}
+
+/**
  * CRM navigation. Desktop: illuminated tabs (CSS only: glow + a single light sweep on hover, an
  * accent bar for the active tab). Mobile: a menu button opening a full-width drawer with large
- * touch rows. Pressed feedback (:active) replaces hover on touch. Sign-out is passed in as a server
- * action form so no auth logic lives here.
+ * touch rows. Pressed feedback (:active) replaces hover on touch. Sign-out and the theme/language
+ * controls are passed in as server-rendered nodes, so no auth logic lives here and the labels arrive
+ * already translated.
  */
-export function CrmNav({ items, label, menuOpen, menuClose, userName, role, signOut }: {
-  items: Item[]; label: string; menuOpen: string; menuClose: string; userName: string; role: string; signOut: ReactNode;
+export function CrmNav({ items, label, menuOpen, menuClose, userName, role, signOut, prefs }: {
+  items: Item[]; label: string; menuOpen: string; menuClose: string; userName: string; role: string; signOut: ReactNode; prefs: ReactNode;
 }) {
   const path = usePathname();
   // The drawer belongs to the page it was opened on: navigating closes it without an effect.
@@ -53,6 +64,7 @@ export function CrmNav({ items, label, menuOpen, menuClose, userName, role, sign
                 <Link href={it.href} aria-current={isActive(it, path) ? "page" : undefined} className="crm-tab">
                   <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
                   {it.label}
+                  <LinkPending />
                 </Link>
               </li>
             );
@@ -60,11 +72,12 @@ export function CrmNav({ items, label, menuOpen, menuClose, userName, role, sign
         </ul>
       </nav>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         <p className="hidden items-center gap-2 text-sm xl:flex">
           <span>{userName}</span>
           <span className="tag">{role}</span>
         </p>
+        {prefs}
         <div className="hidden lg:block">{signOut}</div>
         <button
           ref={button}
@@ -90,6 +103,7 @@ export function CrmNav({ items, label, menuOpen, menuClose, userName, role, sign
                     <Link href={it.href} aria-current={isActive(it, path) ? "page" : undefined} className="crm-tab w-full justify-start text-base" style={{ minHeight: "3.25rem" }}>
                       <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
                       {it.label}
+                      <LinkPending />
                     </Link>
                   </li>
                 );

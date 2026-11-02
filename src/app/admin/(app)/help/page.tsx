@@ -1,116 +1,92 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { rich } from "@/features/admin-prefs/rich";
+import { getT } from "@/features/admin-prefs/server";
 import { requireStaff } from "@/features/crm/auth";
 
-export const metadata: Metadata = { title: "Pomoc" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return { title: t("help.title") };
+}
 
 // A short guide that describes only what exists in this CRM: the real tabs, buttons, fields, statuses
-// and permissions (see src/features/crm and the RLS policies). Update it when the workflow changes.
+// and permissions (see src/features/crm and the RLS policies). Update it, in both languages, when the
+// workflow changes (the texts live in features/admin-prefs/dict-*.ts).
 
-const OWNER = <span className="tag ml-2 align-middle">tylko właściciel</span>;
-
-const STEPS: { title: string; owner?: boolean; body: React.ReactNode }[] = [
-  {
-    title: "1. Dodaj opiekuna",
-    owner: true,
-    body: (
-      <>Wejdź w zakładkę <Link className="link" href="/admin/team">Zespół</Link>, wpisz imię, nazwisko i e-mail w sekcji „Dodaj opiekuna” i wyślij zaproszenie.
-        Osoba dostaje e-mail, ustawia hasło i może się zalogować. Na liście widzisz, czy zaproszenie zostało przyjęte. Konto możesz w każdej chwili dezaktywować.</>
-    ),
-  },
-  {
-    title: "2. Odbierz nowy lead",
-    body: (
-      <>Zapytania z formularza na stronie trafiają do zakładki <Link className="link" href="/admin/leads">Leady</Link> ze statusem „Nowy”.
-        Kafelek „Nowe” i widok „Nieprzypisane” pokazują, co czeka. Zapytanie telefoniczne dodasz przyciskiem „Nowy lead”.</>
-    ),
-  },
-  {
-    title: "3. Przypisz lead",
-    owner: true,
-    body: (
-      <>Otwórz lead (kliknij wiersz), w sekcji „Obsługa” wybierz osobę w polu „Opiekun” i kliknij „Zapisz opiekuna”. Zmianę przypisania zrobisz tak samo.
-        Zmiana jest rejestrowana w dzienniku zdarzeń. Każdy aktywny członek zespołu widzi wszystkie leady; „Moje leady” to filtr dla wygody.</>
-    ),
-  },
-  {
-    title: "4. Skontaktuj się i zapisz kontakt",
-    body: (
-      <>W leadzie, w „Historia kontaktu”, wybierz rodzaj wpisu (notatka, rozmowa, e-mail, spotkanie), opisz rozmowę i kliknij „Dodaj wpis”.
-        Na liście leadów widać datę ostatniego kontaktu.</>
-    ),
-  },
-  {
-    title: "5. Zmień status",
-    body: (
-      <>W sekcji „Obsługa” wybierz status (Nowy, Po kontakcie, Zainteresowany, Spotkanie, Zrealizowany, Niezainteresowany, Nieosiągalny) i kliknij „Zapisz status”.
-        Każda zmiana trafia do historii.</>
-    ),
-  },
-  {
-    title: "6. Zaplanuj następny kontakt",
-    body: (
-      <>W sekcji „Obsługa” ustaw „Następny kontakt (data)” i krótki „Następny krok”, potem „Zapisz termin”. Puste pola usuwają termin.
-        Widok „Do kontaktu dziś i zaległe” na liście leadów zbiera leady, na które przyszła pora.</>
-    ),
-  },
-  {
-    title: "7. Szukaj, filtruj, archiwizuj",
-    body: (
-      <>Na liście użyj pola „Szukaj” (imię, nazwisko, e-mail, telefon), filtrów Inwestycja, Źródło i Opiekun oraz zakładek statusów.
-        „Archiwizuj” w leadzie chowa go z listy; „Pokaż archiwum” + „Przywróć z archiwum” cofa to. Archiwizować i przywracać może każdy aktywny członek zespołu.</>
-    ),
-  },
-];
-
-const PERMISSIONS: [string, string, string][] = [
-  ["Przeglądanie i wyszukiwanie leadów", "tak", "tak"],
-  ["Dodawanie leadów ręcznie, notatki, kontakty, statusy, terminy", "tak", "tak"],
-  ["Przypisywanie i zmiana opiekuna", "tak", "tak (technicznie), zwykle robi to właściciel"],
-  ["Archiwizowanie i przywracanie", "tak", "tak"],
-  ["Trwałe usuwanie leada", "tak", "nie"],
-  ["Zespół: zaproszenia, dezaktywacja kont", "tak", "nie"],
-];
+const STEPS = [
+  { key: "s1", owner: true },
+  { key: "s2", owner: false },
+  { key: "s3", owner: true },
+  { key: "s4", owner: false },
+  { key: "s5", owner: false },
+  { key: "s6", owner: false },
+  { key: "s7", owner: false },
+] as const;
 
 export default async function HelpPage() {
   const { profile } = await requireStaff();
+  const { t } = await getT();
   const owner = profile.role === "owner";
+  const links = {
+    team: <Link className="link" href="/admin/team">{t("nav.team")}</Link>,
+    leads: <Link className="link" href="/admin/leads">{t("nav.leads")}</Link>,
+    security: <Link className="link" href="/admin/security">{t("nav.security")}</Link>,
+  };
+  const perms = [
+    [t("help.perm.p1"), t("help.perm.yes"), t("help.perm.yes")],
+    [t("help.perm.p2"), t("help.perm.yes"), t("help.perm.yes")],
+    [t("help.perm.p3"), t("help.perm.yes"), t("help.perm.p3agent")],
+    [t("help.perm.p4"), t("help.perm.yes"), t("help.perm.yes")],
+    [t("help.perm.p5"), t("help.perm.yes"), t("help.perm.no")],
+    [t("help.perm.p6"), t("help.perm.yes"), t("help.perm.no")],
+  ] as const;
+
   return (
     <main id="content" className="wrap py-8 lg:py-12">
-      <h1 className="display text-4xl sm:text-5xl">Pomoc</h1>
+      <h1 className="display text-4xl sm:text-5xl">{t("help.title")}</h1>
       <p className="mt-2 max-w-2xl text-muted">
-        Jak pracować z leadami od zapytania klienta do zamknięcia sprawy.
-        {owner ? " Kroki oznaczone „tylko właściciel” wykonujesz Ty." : " Kroki oznaczone „tylko właściciel” wykonuje właściciel."}
+        {t("help.intro")}
+        {owner ? t("help.introOwner") : t("help.introAgent")}
       </p>
 
       <ol className="mt-8 grid gap-3 lg:grid-cols-2">
         {STEPS.map((s) => (
-          <li key={s.title} className="crm-panel p-5">
-            <h2 className="text-lg font-semibold">{s.title}{s.owner && OWNER}</h2>
-            <p className="mt-2 text-muted">{s.body}</p>
+          <li key={s.key} className="crm-panel p-5">
+            <h2 className="text-lg font-semibold">{t(`help.${s.key}.title`)}{s.owner && <span className="tag ml-2 align-middle">{t("help.ownerOnly")}</span>}</h2>
+            <p className="mt-2 text-muted">{rich(t(`help.${s.key}.body`), links)}</p>
           </li>
         ))}
       </ol>
 
       <section aria-labelledby="perm" className="mt-10">
-        <h2 id="perm" className="eyebrow">Kto co może</h2>
-        <div className="mt-4 overflow-x-auto">
+        <h2 id="perm" className="eyebrow">{t("help.perm.title")}</h2>
+
+        {/* Phones: one card per action instead of a table that scrolls sideways. */}
+        <ul className="mt-4 grid gap-2 sm:hidden">
+          {perms.map(([action, o, a]) => (
+            <li key={action} className="crm-panel p-4 text-sm">
+              <p className="font-medium">{action}</p>
+              <p className="mt-2 text-muted">{t("help.perm.owner")}: {o}</p>
+              <p className="text-muted">{t("help.perm.agent")}: {a}</p>
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-4 hidden overflow-x-auto sm:block">
           <table className="w-full min-w-[34rem] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-border"><th scope="col" className="py-2 pr-4 font-medium">Czynność</th><th scope="col" className="py-2 pr-4 font-medium">Właściciel</th><th scope="col" className="py-2 font-medium">Opiekun</th></tr>
+              <tr className="border-b border-border"><th scope="col" className="py-2 pr-4 font-medium">{t("help.perm.action")}</th><th scope="col" className="py-2 pr-4 font-medium">{t("help.perm.owner")}</th><th scope="col" className="py-2 font-medium">{t("help.perm.agent")}</th></tr>
             </thead>
             <tbody>
-              {PERMISSIONS.map(([a, o, p]) => (
-                <tr key={a} className="border-b border-border"><td className="py-2 pr-4">{a}</td><td className="py-2 pr-4">{o}</td><td className="py-2">{p}</td></tr>
+              {perms.map(([action, o, a]) => (
+                <tr key={action} className="border-b border-border"><td className="py-2 pr-4">{action}</td><td className="py-2 pr-4">{o}</td><td className="py-2">{a}</td></tr>
               ))}
             </tbody>
           </table>
         </div>
       </section>
 
-      <p className="mt-8 text-sm text-muted">
-        Bezpieczeństwo konta: w zakładce <Link className="link" href="/admin/security">Bezpieczeństwo</Link> możesz dodać aplikację uwierzytelniającą (drugi składnik). Kto ją ma, jest o nią pytany przy każdym logowaniu.
-      </p>
+      <p className="mt-8 text-sm text-muted">{rich(t("help.security"), links)}</p>
     </main>
   );
 }

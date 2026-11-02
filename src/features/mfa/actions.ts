@@ -9,13 +9,15 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import type { Translate } from "@/features/admin-prefs/core";
+import { getT } from "@/features/admin-prefs/server";
 import { trustedClientKey } from "@/lib/security/client-ip";
 import { createRateLimiter } from "@/lib/security/rate-limit";
 import { factorName, formatSecret, otpLink, qrImageSrc } from "./enrol";
 import { assessMfaRecency, safeNext } from "./policy";
 import { requireMfaSession } from "./session";
 import { loadMfaState } from "./state";
-import { MESSAGES, type EnrolState, type MfaResult } from "./types";
+import type { EnrolState, MfaResult } from "./types";
 import { attemptMfaVerify, classifyMfaError, newMfaGuard, type VerifyOutcome } from "./verify";
 
 // Per server process, like the login guard (see src/lib/security/login-guard.ts for its limits).
@@ -26,7 +28,7 @@ const idSchema = z.string().uuid();
 const text = (fd: FormData, k: string) => String(fd.get(k) ?? "");
 const REAUTH_MAX_AGE_SECONDS = 5 * 60;
 
-const messageFor = (o: VerifyOutcome) => (o === "rate" ? MESSAGES.rate : o === "unavailable" ? MESSAGES.unavailable : MESSAGES.invalid);
+const messageFor = (o: VerifyOutcome, t: Translate) => (o === "rate" ? t("mfa.rate") : o === "unavailable" ? t("mfa.unavailable") : t("mfa.invalid"));
 
 async function verifyFactor(supabase: SupabaseClient, userId: string, factorId: string, code: unknown): Promise<VerifyOutcome> {
   const clientKey = trustedClientKey(await headers(), process.env);
@@ -45,13 +47,14 @@ async function verifyFactor(supabase: SupabaseClient, userId: string, factorId: 
 /** Step 1: create a pending TOTP factor and return what the user needs to scan or type. */
 export async function startEnrollment(_prev: EnrolState, formData: FormData): Promise<EnrolState> {
   const { supabase, state } = await requireMfaSession();
-  if (!enrolLimiter.check(state.userId).allowed) return { step: "error", message: MESSAGES.rate };
+  const { t } = await getT();
+  if (!enrolLimiter.check(state.userId).allowed) return { step: "error", message: t("mfa.rate") };
 
   // A previous, never-verified attempt would otherwise pile up (and count towards the factor limit).
   for (const f of state.factors.filter((x) => x.status === "unverified")) await supabase.auth.mfa.unenroll({ factorId: f.id });
 
   const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: factorName(text(formData, "name")), issuer: "Panel CRM" });
-  if (error || !data) return { step: "error", message: MESSAGES.failed };
+  if (error || !data) return { step: "error", message: t("mfa.failed") };
 
   return { step: "scan", factorId: data.id, qrSrc: qrImageSrc(data.totp.qr_code), secret: formatSecret(data.totp.secret), otpUri: otpLink(data.totp.uri) };
 }
@@ -59,13 +62,14 @@ export async function startEnrollment(_prev: EnrolState, formData: FormData): Pr
 /** Step 2: prove the app works by entering a code. Success also upgrades this session to aal2. */
 export async function confirmEnrollment(factorId: string, _prev: MfaResult, formData: FormData): Promise<MfaResult> {
   const { supabase, state } = await requireMfaSession();
+  const { t } = await getT();
   const target = idSchema.safeParse(factorId).success ? state.factors.find((f) => f.id === factorId) : undefined;
-  if (!target || target.status !== "unverified" || target.type !== "totp") return { ok: false, message: MESSAGES.failed };
+  if (!target || target.status !== "unverified" || target.type !== "totp") return { ok: false, message: t("mfa.failed") };
 
   const outcome = await verifyFactor(supabase, state.userId, factorId, text(formData, "code"));
-  if (outcome !== "ok") return { ok: false, message: messageFor(outcome) };
+  if (outcome !== "ok") return { ok: false, message: messageFor(outcome, t) };
   revalidatePath("/admin/security");
-  return { ok: true, message: "Aplikacja została dodana. Ta sesja jest teraz zweryfikowana drugim składnikiem." };
+  return { ok: true, message: t("mfa.added") };
 }
 
 /** Abandons a pending (unverified) enrolment. Needs no code: nothing is protected by it yet. */
@@ -79,12 +83,13 @@ export async function cancelEnrollment(factorId: string): Promise<void> {
 /** The challenge: answer with a code from an enrolled factor, then continue to a validated address. */
 export async function challengeFactor(next: string, _prev: MfaResult, formData: FormData): Promise<MfaResult> {
   const { supabase, state } = await requireMfaSession();
+  const { t } = await getT();
   const requested = text(formData, "factorId");
   const factor = state.verifiedTotp.find((f) => f.id === requested) ?? (state.verifiedTotp.length === 1 ? state.verifiedTotp[0] : undefined);
-  if (!factor) return { ok: false, message: MESSAGES.failed };
+  if (!factor) return { ok: false, message: t("mfa.failed") };
 
   const outcome = await verifyFactor(supabase, state.userId, factor.id, text(formData, "code"));
-  if (outcome !== "ok") return { ok: false, message: messageFor(outcome) };
+  if (outcome !== "ok") return { ok: false, message: messageFor(outcome, t) };
   redirect(safeNext(next)); // outside any try: redirect() works by throwing
 }
 
@@ -96,28 +101,29 @@ export async function challengeFactor(next: string, _prev: MfaResult, formData: 
  */
 export async function removeFactor(factorId: string, _prev: MfaResult, formData: FormData): Promise<MfaResult> {
   const { supabase, state } = await requireMfaSession();
+  const { t } = await getT();
   const target = idSchema.safeParse(factorId).success ? state.factors.find((f) => f.id === factorId) : undefined;
-  if (!target) return { ok: false, message: MESSAGES.failed };
+  if (!target) return { ok: false, message: t("mfa.failed") };
 
-  if (text(formData, "confirm") !== "on") return { ok: false, message: "Zaznacz potwierdzenie, aby usunąć aplikację." };
+  if (text(formData, "confirm") !== "on") return { ok: false, message: t("mfa.confirmRemove") };
   const verified = state.factors.filter((f) => f.status === "verified");
   if (target.status === "verified" && verified.length === 1 && text(formData, "confirmLast") !== "on") {
-    return { ok: false, message: "To jedyna aplikacja. Zaznacz, że rozumiesz skutki jej usunięcia." };
+    return { ok: false, message: t("mfa.confirmLast") };
   }
 
   // Re-authenticate with an enrolled factor (the one being removed, or another one that still works).
   const verifier = state.verifiedTotp.find((f) => f.id === text(formData, "verifyWith")) ?? state.verifiedTotp.find((f) => f.id === factorId);
-  if (!verifier) return { ok: false, message: MESSAGES.failed };
+  if (!verifier) return { ok: false, message: t("mfa.failed") };
   const outcome = await verifyFactor(supabase, state.userId, verifier.id, text(formData, "code"));
-  if (outcome !== "ok") return { ok: false, message: messageFor(outcome) };
+  if (outcome !== "ok") return { ok: false, message: messageFor(outcome, t) };
 
   // Do not trust the call above alone: require a fresh TOTP event in the server-validated claims.
   const fresh = await loadMfaState(supabase);
   const recent = fresh.signedIn && fresh.currentLevel === "aal2" && assessMfaRecency({ amr: fresh.amr, now: Math.floor(Date.now() / 1000), maxAgeSeconds: REAUTH_MAX_AGE_SECONDS }) === "fresh";
-  if (!recent) return { ok: false, message: "Nie udało się potwierdzić weryfikacji. Zaloguj się ponownie i spróbuj jeszcze raz." };
+  if (!recent) return { ok: false, message: t("mfa.recency") };
 
   const { error } = await supabase.auth.mfa.unenroll({ factorId });
-  if (error) return { ok: false, message: MESSAGES.failed };
+  if (error) return { ok: false, message: t("mfa.failed") };
   revalidatePath("/admin/security");
-  return { ok: true, message: "Aplikacja została usunięta." };
+  return { ok: true, message: t("mfa.removed") };
 }

@@ -1,5 +1,6 @@
 // Pure CRM helpers: filter parsing, search sanitising and action input validation. Relative imports
-// only (tested with node --test). The CRM is Polish only (docs/decisions.md, row 4).
+// only (tested with node --test). Validation messages are dictionary KEYS (v.*); the server action that returns
+// them translates them for the interface language (see features/admin-prefs).
 import { z } from "zod";
 import { leadSchema } from "../leads/schema.ts";
 
@@ -88,9 +89,9 @@ export function listHref(f: LeadFilters, over: Partial<Record<"q" | "status" | "
 const bodyText = z
   .string()
   .trim()
-  .min(1, "Treść nie może być pusta.")
-  .max(5000, "Treść jest za długa (maksymalnie 5000 znaków).")
-  .refine((v) => !/[\u0001-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(v), "Treść zawiera niedozwolone znaki.");
+  .min(1, "v.bodyEmpty")
+  .max(5000, "v.bodyLong")
+  .refine((v) => !/[\u0001-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(v), "v.bodyChars");
 
 export const activitySchema = z.strictObject({ type: z.enum(ACTIVITY_TYPES), body: bodyText });
 export const statusSchema = z.strictObject({ status: z.enum(LEAD_STATUSES) });
@@ -128,13 +129,13 @@ export const followUpSchema = z.strictObject({
   followUpOn: z
     .string()
     .trim()
-    .refine((v) => v === "" || (/^\d{4}-\d{2}-\d{2}$/.test(v) && isRealDate(v)), "Podaj poprawną datę.")
+    .refine((v) => v === "" || (/^\d{4}-\d{2}-\d{2}$/.test(v) && isRealDate(v)), "v.date")
     .transform((v) => (v === "" ? null : v)),
   nextAction: z
     .string()
     .trim()
-    .max(200, "Następny krok może mieć najwyżej 200 znaków.")
-    .refine((v) => !/[\u0000-\u001f\u007f]/.test(v), "Tekst zawiera niedozwolone znaki.")
+    .max(200, "v.nextActionLong")
+    .refine((v) => !/[\u0000-\u001f\u007f]/.test(v), "v.textChars")
     .transform((v) => (v === "" ? null : v)),
 });
 
@@ -146,16 +147,16 @@ export function followUpState(date: string | null | undefined, today: string): F
 
 /** New team member: a real e-mail and a display name. Role is NOT an input (always the least-privileged "assistant"). */
 export const inviteSchema = z.strictObject({
-  email: z.string().trim().toLowerCase().max(254).email("Podaj poprawny adres e-mail."),
+  email: z.string().trim().toLowerCase().max(254).email("v.email"),
   fullName: z
     .string()
     .trim()
-    .min(1, "Podaj imię i nazwisko.")
-    .max(120, "Imię i nazwisko jest za długie.")
-    .refine((v) => !/[\u0000-\u001f\u007f]/.test(v), "Tekst zawiera niedozwolone znaki."),
+    .min(1, "v.nameRequired")
+    .max(120, "v.nameLong")
+    .refine((v) => !/[\u0000-\u001f\u007f]/.test(v), "v.textChars"),
 });
 export const activeSchema = z.strictObject({ userId: z.string().uuid(), active: z.enum(["true", "false"]).transform((v) => v === "true") });
 export const passwordSchema = z.strictObject({
-  password: z.string().min(12, "Hasło musi mieć co najmniej 12 znaków.").max(72, "Hasło może mieć najwyżej 72 znaki."),
+  password: z.string().min(12, "v.pwMin").max(72, "v.pwMax"),
   confirm: z.string(),
-}).refine((v) => v.password === v.confirm, { message: "Hasła nie są takie same.", path: ["confirm"] });
+}).refine((v) => v.password === v.confirm, { message: "v.pwMatch", path: ["confirm"] });

@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { z } from "zod";
+import { getT } from "@/features/admin-prefs/server";
 import { requireStaff } from "@/features/crm/auth";
 import { LeadDetailView } from "@/features/crm/components/LeadDetailView";
 import { getLead, listActivities, listStaff } from "@/features/crm/queries";
 
-export const metadata: Metadata = { title: "Lead" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return { title: t("detail.pageTitle") };
+}
 
 export default async function LeadPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

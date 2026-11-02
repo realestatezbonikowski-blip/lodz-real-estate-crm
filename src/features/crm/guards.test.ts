@@ -36,7 +36,7 @@ describe("server actions", () => {
 
   test("a filtered-out write is reported as a failure, not success", () => {
     for (const name of ["updateLeadStatus", "assignLead", "updateContact", "setArchived", "deleteLead"]) {
-      assert.match(fns.find((f) => f.name === name)!.body, /!data\?\.length\) return NO_RIGHTS/, `${name} must treat zero affected rows as no permission`);
+      assert.match(fns.find((f) => f.name === name)!.body, /!data\?\.length\) return noRights\(t\)/, `${name} must treat zero affected rows as no permission`);
     }
   });
 });
@@ -55,11 +55,29 @@ describe("client addresses and login limiting", () => {
     for (const src of [actions, route]) assert.ok(!/["']unknown["']/.test(src), 'a literal "unknown" bucket would let anyone lock out everyone');
   });
 
-  test("signIn goes through attemptLogin, and answers every non-success with the outcome only", () => {
-    const body = actions.slice(actions.indexOf("export async function signIn"), actions.indexOf("export async function signOut"));
+  /**
+   * The structural check on signIn. It takes the source as it comes from disk: a Windows checkout with
+   * core.autocrlf=true has CRLF line endings, and line endings are not part of what is being checked.
+   */
+  function assertSignInIsGuarded(source: string) {
+    const src = source.replace(/\r\n/g, "\n");
+    const body = src.slice(src.indexOf("export async function signIn"), src.indexOf("export async function signOut"));
     assert.match(body, /attemptLogin\(/);
     assert.match(body, /redirect\(`\/admin\/login\?error=\$\{outcome\}`\)/);
     assert.ok(!/signInWithPassword/.test(body.replace(/authenticate:[\s\S]*?classifyAuthError\(error\);\n {6}\},/, "")), "signInWithPassword may only be called inside the authenticate callback");
+  }
+
+  test("signIn goes through attemptLogin, and answers every non-success with the outcome only", () => {
+    assertSignInIsGuarded(actions);
+  });
+
+  test("the same check holds with CRLF line endings (a Windows checkout), and it can still fail", () => {
+    assertSignInIsGuarded(actions.replace(/\r?\n/g, "\r\n"));
+    const leak = "const leak = () => supabase.auth.signInWithPassword({ email, password });\n";
+    const broken = actions.replace("export async function signOut", `${leak}export async function signOut`);
+    assert.notEqual(broken, actions, "the sabotage must have been applied");
+    assert.throws(() => assertSignInIsGuarded(broken), "a call outside the authenticate callback must be caught (LF)");
+    assert.throws(() => assertSignInIsGuarded(broken.replace(/\r?\n/g, "\r\n")), "and with CRLF");
   });
 
   test("the login page shows only fixed messages for the error codes", () => {

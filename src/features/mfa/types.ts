@@ -6,10 +6,3 @@ export type EnrolState =
   | { step: "idle" }
   | { step: "error"; message: string }
   | { step: "scan"; factorId: string; qrSrc: string | null; secret: string | null; otpUri: string | null };
-
-export const MESSAGES = {
-  invalid: "Nieprawidłowy lub wygasły kod. Spróbuj ponownie.",
-  rate: "Zbyt wiele prób. Spróbuj ponownie za kilka minut.",
-  unavailable: "Weryfikacja jest chwilowo niedostępna. Spróbuj ponownie za chwilę.",
-  failed: "Nie udało się wykonać operacji. Spróbuj ponownie.",
-} as const;
