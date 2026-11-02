@@ -27,9 +27,15 @@ async function admin(request: NextRequest) {
         },
       },
     });
-    const { data } = await supabase.auth.getUser(); // validates the token with the Auth server
+    // getClaims() checks the token signature against the project public keys (cached in memory) and its
+    // expiry, and refreshes the session when it has expired. Unlike getUser() it makes no Auth-server round
+    // trip, which this proxy would otherwise pay on every page view, every link prefetch and every action.
+    // That is enough for a redirect convenience; the authoritative check (getUser() on the Auth server) is
+    // still made by requireStaff() on every page and action, so a revoked session cannot get past it.
+    const { data } = await supabase.auth.getClaims();
+    const signedIn = Boolean(data?.claims?.sub);
     // /admin/auth/* is the invitation landing point: its one-time token IS the credential there.
-    if (!data.user && pathname !== "/admin/login" && !pathname.startsWith("/admin/auth/")) {
+    if (!signedIn && pathname !== "/admin/login" && !pathname.startsWith("/admin/auth/")) {
       const login = request.nextUrl.clone();
       login.pathname = "/admin/login";
       login.search = "";
