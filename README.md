@@ -19,7 +19,7 @@ Checks: `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:db` 
 | Path | Purpose |
 |---|---|
 | `src/app/[locale]/` | Public multilingual site (`/pl`, `/uk`, `/en`; Polish is default) |
-| `src/app/admin/` | Future CRM (Polish only, excluded from locale routing, `noindex`) |
+| `src/app/admin/` | CRM (Polish by default with an English option, own theme and language cookies, excluded from locale routing, `noindex`) |
 | `src/i18n/` | next-intl routing, request config, navigation helpers, typed messages |
 | `src/proxy.ts` | Locale routing (Next.js 16 name for middleware) |
 | `messages/` | UI translations. `pl.json` is the type source for all locales |

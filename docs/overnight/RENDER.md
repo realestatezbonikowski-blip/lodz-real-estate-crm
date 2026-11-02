@@ -32,6 +32,9 @@ Never put the Supabase service/secret key in a `NEXT_PUBLIC_` variable.
 2. Confirm TOTP MFA is enabled; the owner account exists with a `profiles` row (docs/dev-migration-runbook.md).
 3. The migrations must already be applied to the project you point at. On the dev project all six are applied as of 2026-11-01, including the `lead_intake` role and the follow-up migration; a production project would need them applied too, and no production project has been migrated or configured.
 
+## Region (affects speed)
+`render.yaml` sets no region, so Render's default applies, and a service's region cannot be changed afterwards. Every page of the CRM makes several requests to Supabase, so a region close to the Supabase project (here `eu-west-1`, Ireland; Frankfurt if Render offers it) should make the panel noticeably faster than a distant one. This is general knowledge, not measured against the real project; check the service's Settings -> Region.
+
 ## Free-tier behaviour to expect (from general knowledge of Render's free web services; verify on render.com/docs/free)
 Services spin down after ~15 minutes without traffic, so the first request after idle takes tens of seconds; limited RAM/CPU;
 a monthly free-hours allowance. Open the site once before a client meeting to wake it. The scroll hero loads ~2 MB of frames
